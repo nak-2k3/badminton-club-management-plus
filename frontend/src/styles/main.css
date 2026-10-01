@@ -1,4 +1,9 @@
-/* Màu chủ đạo xanh lá của CLB (ghi đè biến của Element Plus) */
+/*
+ * Màu chủ đạo xanh lá của CLB, ghi đè biến của Element Plus.
+ * Chế độ tối dùng sắc xanh sáng hơn để chữ/link đủ tương phản trên nền tối;
+ * các mức light-* ở chế độ tối được pha với nền #141414 (giống cách Element Plus làm).
+ * Mọi màu trong component dùng biến --el-* để tự đổi theo theme, không viết mã màu cứng.
+ */
 :root {
   --el-color-primary: #1d6f42;
   --el-color-primary-light-3: #4a9b6e;
@@ -7,6 +12,21 @@
   --el-color-primary-light-8: #d2e5d9;
   --el-color-primary-light-9: #e8f1ec;
   --el-color-primary-dark-2: #175935;
+
+  --app-header-height: 60px;
+  --app-login-gradient: linear-gradient(135deg, #1d6f42 0%, #2e9d5b 100%);
+}
+
+html.dark {
+  --el-color-primary: #2f9a5c;
+  --el-color-primary-light-3: #277246;
+  --el-color-primary-light-5: #225738;
+  --el-color-primary-light-7: #1c3c2a;
+  --el-color-primary-light-8: #192f22;
+  --el-color-primary-light-9: #17211b;
+  --el-color-primary-dark-2: #59ae7d;
+
+  --app-login-gradient: linear-gradient(135deg, #0d2318 0%, #17402a 100%);
 }
 
 html,
@@ -18,6 +38,36 @@ body,
 
 body {
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #303133;
+  background: var(--el-bg-color-page);
+  color: var(--el-text-color-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Chữ phụ (email dưới tên, gợi ý dưới ô nhập...) */
+.text-secondary {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+/* Hiệu ứng chuyển trang trong layout */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
 }

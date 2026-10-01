@@ -1,5 +1,6 @@
 package com.badmintonclub.clubmanagement.dto.member;
 
+import com.badmintonclub.clubmanagement.dto.common.DateFormats;
 import com.badmintonclub.clubmanagement.entity.User;
 import com.badmintonclub.clubmanagement.enums.Gender;
 import com.badmintonclub.clubmanagement.enums.UserStatus;
@@ -14,16 +15,16 @@ public record MemberResponse(
         String email,
         String phone,
         Gender gender,
-        @JsonFormat(pattern = "dd/MM/yyyy") LocalDate birthDate,
+        @JsonFormat(pattern = DateFormats.DATE) LocalDate birthDate,
         String address,
         Long roleId,
         String roleName,
         Long levelId,
         String levelName,
-        @JsonFormat(pattern = "dd/MM/yyyy") LocalDate joinDate,
+        @JsonFormat(pattern = DateFormats.DATE) LocalDate joinDate,
         UserStatus status,
         String avatar,
-        @JsonFormat(pattern = "dd/MM/yyyy HH:mm") LocalDateTime createdAt
+        @JsonFormat(pattern = DateFormats.DATE_TIME) LocalDateTime createdAt
 ) {
     // Cần nạp sẵn role, level (@EntityGraph) trước khi gọi
     public static MemberResponse from(User user) {

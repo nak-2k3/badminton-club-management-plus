@@ -76,6 +76,6 @@ async function handleSubmit() {
 <style scoped>
 .desc {
   margin-top: 0;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 </style>

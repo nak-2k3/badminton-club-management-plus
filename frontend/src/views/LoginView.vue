@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import ThemeToggle from '@/components/common/ThemeToggle.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -44,6 +45,7 @@ async function handleLogin() {
 
 <template>
   <div class="login-page">
+    <div class="theme-corner"><ThemeToggle /></div>
     <el-card class="login-card" shadow="always">
       <div class="login-header">
         <div class="logo">🏸</div>
@@ -95,13 +97,28 @@ async function handleLogin() {
   justify-content: center;
   padding: 16px;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #1d6f42 0%, #2e9d5b 100%);
+  background: var(--app-login-gradient);
+  position: relative;
+}
+
+.theme-corner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
   border-radius: 12px;
+  animation: card-in 0.4s ease;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 .login-header {
@@ -120,7 +137,13 @@ async function handleLogin() {
 
 .login-header p {
   margin: 0 0 16px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card {
+    animation: none;
+  }
 }
 
 .login-button {

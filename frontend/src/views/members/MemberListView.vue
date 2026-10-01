@@ -168,120 +168,130 @@ onMounted(async () => {
 </script>
 
 <template>
-  <el-card shadow="never">
-    <!-- Thanh tìm kiếm & lọc -->
-    <div class="toolbar">
-      <el-input
-        v-model="filters.keyword"
-        :prefix-icon="Search"
-        placeholder="Tìm theo tên, email, số điện thoại"
-        clearable
-        class="keyword"
-        @keyup.enter="search"
-      />
-      <el-select v-model="filters.status" placeholder="Trạng thái" clearable class="filter" @change="search">
-        <el-option v-for="s in statusOptions" :key="s.value" :value="s.value" :label="s.label" />
-      </el-select>
-      <el-select v-model="filters.roleId" placeholder="Vai trò" clearable class="filter" @change="search">
-        <el-option v-for="r in catalog.roles" :key="r.id" :value="r.id" :label="ROLE_LABELS[r.name] ?? r.name" />
-      </el-select>
-      <el-select v-model="filters.levelId" placeholder="Trình độ" clearable class="filter" @change="search">
-        <el-option v-for="l in catalog.levels" :key="l.id" :value="l.id" :label="LEVEL_LABELS[l.name] ?? l.name" />
-      </el-select>
-      <el-select v-model="filters.gender" placeholder="Giới tính" clearable class="filter" @change="search">
-        <el-option v-for="g in genderOptions" :key="g.value" :value="g.value" :label="g.label" />
-      </el-select>
-      <el-button @click="resetFilters">Xóa lọc</el-button>
-      <div class="spacer" />
-      <el-button type="primary" :icon="Plus" @click="openCreate">Thêm thành viên</el-button>
-    </div>
+  <div class="member-list">
+    <!--
+      Trang nằm trong <transition mode="out-in"> của MainLayout nên chỉ được có ĐÚNG 1 nút gốc.
+      Không đặt chú thích HTML ngang hàng với div này: ở chế độ dev Vue giữ chú thích,
+      component thành 2 nút gốc và trang kế tiếp không hiện (phải F5).
+    -->
+    <el-card shadow="never">
+      <!-- Thanh tìm kiếm & lọc -->
+      <div class="toolbar">
+        <el-input
+          v-model="filters.keyword"
+          :prefix-icon="Search"
+          placeholder="Tìm theo tên, email, số điện thoại"
+          clearable
+          class="keyword"
+          @keyup.enter="search"
+        />
+        <el-select v-model="filters.status" placeholder="Trạng thái" clearable class="filter" @change="search">
+          <el-option v-for="s in statusOptions" :key="s.value" :value="s.value" :label="s.label" />
+        </el-select>
+        <el-select v-model="filters.roleId" placeholder="Vai trò" clearable class="filter" @change="search">
+          <el-option v-for="r in catalog.roles" :key="r.id" :value="r.id" :label="ROLE_LABELS[r.name] ?? r.name" />
+        </el-select>
+        <el-select v-model="filters.levelId" placeholder="Trình độ" clearable class="filter" @change="search">
+          <el-option v-for="l in catalog.levels" :key="l.id" :value="l.id" :label="LEVEL_LABELS[l.name] ?? l.name" />
+        </el-select>
+        <el-select v-model="filters.gender" placeholder="Giới tính" clearable class="filter" @change="search">
+          <el-option v-for="g in genderOptions" :key="g.value" :value="g.value" :label="g.label" />
+        </el-select>
+        <el-button @click="resetFilters">Xóa lọc</el-button>
+        <div class="spacer" />
+        <el-button type="primary" :icon="Plus" @click="openCreate">Thêm thành viên</el-button>
+      </div>
 
-    <!-- Bảng danh sách -->
-    <div class="table-wrap">
-      <el-table
-        v-loading="loading"
-        :data="members"
-        :default-sort="defaultSort"
-        row-key="id"
-        stripe
-        empty-text="Không có thành viên nào"
-        @sort-change="handleSortChange"
-        @row-dblclick="openDetail"
-      >
-        <el-table-column label="STT" width="60" align="center">
-          <template #default="{ $index }">{{ rowIndex($index) }}</template>
-        </el-table-column>
-        <el-table-column label="Họ tên" prop="fullName" min-width="200" sortable="custom">
-          <template #default="{ row }">
-            <el-link type="primary" underline="never" @click="openDetail(row)">{{ row.fullName }}</el-link>
-            <div class="sub-text">{{ row.email }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="Số điện thoại" prop="phone" width="120">
-          <template #default="{ row }">{{ row.phone || '—' }}</template>
-        </el-table-column>
-        <el-table-column label="Ngày sinh" prop="birthDate" width="115" sortable="custom">
-          <template #default="{ row }">{{ row.birthDate || '—' }}</template>
-        </el-table-column>
-        <el-table-column label="Vai trò" width="115">
-          <template #default="{ row }">{{ ROLE_LABELS[row.roleName] ?? row.roleName }}</template>
-        </el-table-column>
-        <el-table-column label="Trình độ" width="110">
-          <template #default="{ row }">{{ LEVEL_LABELS[row.levelName] ?? row.levelName ?? '—' }}</template>
-        </el-table-column>
-        <el-table-column label="Tham gia" prop="joinDate" width="110" sortable="custom" />
-        <el-table-column label="Trạng thái" width="135">
-          <template #default="{ row }">
-            <el-tag :type="USER_STATUS_TAG_TYPES[row.status]" effect="light">
-              {{ USER_STATUS_LABELS[row.status] }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="Thao tác" width="120" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-tooltip content="Xem chi tiết" :show-after="500">
-              <el-button :icon="View" link @click="openDetail(row)" />
-            </el-tooltip>
-            <el-tooltip content="Sửa" :show-after="500">
-              <el-button :icon="Edit" link type="primary" @click="openEdit(row)" />
-            </el-tooltip>
-            <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, row)">
-              <el-button :icon="MoreFilled" link />
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item v-if="row.status !== 'ACTIVE'" command="ACTIVE">Kích hoạt</el-dropdown-item>
-                  <el-dropdown-item v-if="row.status !== 'LOCKED' && !isSelf(row)" command="LOCKED">
-                    Khóa tài khoản
-                  </el-dropdown-item>
-                  <el-dropdown-item v-if="row.status !== 'INACTIVE' && !isSelf(row)" command="INACTIVE">
-                    Ngừng hoạt động
-                  </el-dropdown-item>
-                  <el-dropdown-item command="password" divided>Đặt lại mật khẩu</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
+      <!-- Bảng danh sách -->
+      <div class="table-wrap">
+        <el-table
+          v-loading="loading"
+          :data="members"
+          :default-sort="defaultSort"
+          row-key="id"
+          stripe
+          empty-text="Không có thành viên nào"
+          @sort-change="handleSortChange"
+          @row-dblclick="openDetail"
+        >
+          <!-- Tổng độ rộng ~920px: vừa khung ở màn 1280px kể cả khi menu trái mở rộng -->
+          <el-table-column label="STT" width="56" align="center">
+            <template #default="{ $index }">{{ rowIndex($index) }}</template>
+          </el-table-column>
+          <el-table-column label="Họ tên" prop="fullName" min-width="200" sortable="custom">
+            <template #default="{ row }">
+              <el-link type="primary" underline="never" class="name-link" @click="openDetail(row)">
+                {{ row.fullName }}
+              </el-link>
+              <div class="text-secondary ellipsis">{{ row.email }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="Số điện thoại" prop="phone" width="118">
+            <template #default="{ row }">{{ row.phone || '—' }}</template>
+          </el-table-column>
+          <el-table-column label="Ngày sinh" prop="birthDate" width="112" sortable="custom">
+            <template #default="{ row }">{{ row.birthDate || '—' }}</template>
+          </el-table-column>
+          <el-table-column label="Vai trò / Trình độ" width="140">
+            <template #default="{ row }">
+              <div>{{ ROLE_LABELS[row.roleName] ?? row.roleName }}</div>
+              <div class="text-secondary">{{ LEVEL_LABELS[row.levelName] ?? row.levelName ?? 'Chưa xếp trình độ' }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="Tham gia" prop="joinDate" width="108" sortable="custom" />
+          <el-table-column label="Trạng thái" width="128">
+            <template #default="{ row }">
+              <el-tag :type="USER_STATUS_TAG_TYPES[row.status]" size="small" round disable-transitions>
+                {{ USER_STATUS_LABELS[row.status] }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="Thao tác" width="112" fixed="right" align="center">
+            <template #default="{ row }">
+              <el-tooltip content="Xem chi tiết" :show-after="500">
+                <el-button :icon="View" link @click="openDetail(row)" />
+              </el-tooltip>
+              <el-tooltip content="Sửa" :show-after="500">
+                <el-button :icon="Edit" link type="primary" @click="openEdit(row)" />
+              </el-tooltip>
+              <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, row)">
+                <el-button :icon="MoreFilled" link />
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item v-if="row.status !== 'ACTIVE'" command="ACTIVE">Kích hoạt</el-dropdown-item>
+                    <el-dropdown-item v-if="row.status !== 'LOCKED' && !isSelf(row)" command="LOCKED">
+                      Khóa tài khoản
+                    </el-dropdown-item>
+                    <el-dropdown-item v-if="row.status !== 'INACTIVE' && !isSelf(row)" command="INACTIVE">
+                      Ngừng hoạt động
+                    </el-dropdown-item>
+                    <el-dropdown-item command="password" divided>Đặt lại mật khẩu</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
-    <!-- Phân trang -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.size"
-        :total="pagination.total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next, jumper"
-        background
-        @current-change="fetchMembers"
-        @size-change="search"
-      />
-    </div>
-  </el-card>
+      <!-- Phân trang -->
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          background
+          @current-change="fetchMembers"
+          @size-change="search"
+        />
+      </div>
+    </el-card>
 
-  <MemberFormDialog v-model="formVisible" :member="editingMember" @saved="handleSaved" />
-  <ResetPasswordDialog v-model="passwordVisible" :member="passwordMember" />
+    <MemberFormDialog v-model="formVisible" :member="editingMember" @saved="handleSaved" />
+    <ResetPasswordDialog v-model="passwordVisible" :member="passwordMember" />
+  </div>
 </template>
 
 <style scoped>
@@ -309,9 +319,14 @@ onMounted(async () => {
   overflow-x: auto;
 }
 
-.sub-text {
-  font-size: 12px;
-  color: #909399;
+.name-link {
+  font-weight: 500;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pagination {
@@ -319,5 +334,20 @@ onMounted(async () => {
   justify-content: flex-end;
   margin-top: 16px;
   overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .keyword {
+    width: 100%;
+  }
+
+  /* 2 ô lọc mỗi hàng */
+  .filter {
+    width: calc(50% - 4px);
+  }
+
+  .spacer {
+    display: none;
+  }
 }
 </style>

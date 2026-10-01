@@ -1,7 +1,9 @@
 package com.badmintonclub.clubmanagement.dto.member;
 
 import com.badmintonclub.clubmanagement.enums.Gender;
+import com.badmintonclub.clubmanagement.dto.common.DateFormats;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -27,7 +29,7 @@ public record MemberCreateRequest(
         Gender gender,
 
         @Past(message = "Ngày sinh phải trước ngày hôm nay")
-        @JsonFormat(pattern = "dd/MM/yyyy")
+        @JsonFormat(pattern = DateFormats.DATE, lenient = OptBoolean.FALSE)
         LocalDate birthDate,
 
         @Size(max = 255, message = "Địa chỉ tối đa 255 ký tự")
@@ -40,7 +42,7 @@ public record MemberCreateRequest(
 
         // Để trống thì lấy ngày hôm nay
         @PastOrPresent(message = "Ngày tham gia không được ở tương lai")
-        @JsonFormat(pattern = "dd/MM/yyyy")
+        @JsonFormat(pattern = DateFormats.DATE, lenient = OptBoolean.FALSE)
         LocalDate joinDate
 ) {
 }

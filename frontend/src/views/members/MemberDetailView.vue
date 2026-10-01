@@ -5,6 +5,7 @@ import { ArrowLeft, Edit, Key, Lock, Unlock, CircleClose } from '@element-plus/i
 import { memberApi } from '@/api/members'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberActions } from '@/composables/useMemberActions'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 import MemberFormDialog from '@/components/members/MemberFormDialog.vue'
 import ResetPasswordDialog from '@/components/members/ResetPasswordDialog.vue'
 import {
@@ -19,6 +20,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const { changeStatus } = useMemberActions()
+const { isSmall } = useBreakpoint(768)
 
 const member = ref(null)
 const loading = ref(false)
@@ -80,11 +82,9 @@ onMounted(fetchMember)
     <template v-else-if="member">
       <el-card shadow="never" class="profile">
         <div class="profile-main">
-          <el-avatar :size="72" :src="member.avatar || undefined" class="avatar">
-            {{ member.fullName.charAt(0) }}
-          </el-avatar>
           <div class="profile-info">
             <h2>{{ member.fullName }}</h2>
+            <p class="text-secondary">{{ member.email }}</p>
             <div class="tags">
               <el-tag :type="USER_STATUS_TAG_TYPES[member.status]">{{ USER_STATUS_LABELS[member.status] }}</el-tag>
               <el-tag type="primary" effect="plain">{{ ROLE_LABELS[member.roleName] ?? member.roleName }}</el-tag>
@@ -113,7 +113,7 @@ onMounted(fetchMember)
 
       <el-card shadow="never">
         <template #header>Thông tin chi tiết</template>
-        <el-descriptions :column="2" border class="info">
+        <el-descriptions :column="isSmall ? 1 : 2" border class="info">
           <el-descriptions-item label="Họ tên">{{ member.fullName }}</el-descriptions-item>
           <el-descriptions-item label="Email">{{ member.email }}</el-descriptions-item>
           <el-descriptions-item label="Số điện thoại">{{ member.phone || '—' }}</el-descriptions-item>
@@ -126,7 +126,7 @@ onMounted(fetchMember)
           <el-descriptions-item label="Trạng thái">{{ USER_STATUS_LABELS[member.status] }}</el-descriptions-item>
           <el-descriptions-item label="Ngày tham gia">{{ member.joinDate }}</el-descriptions-item>
           <el-descriptions-item label="Ngày tạo tài khoản">{{ member.createdAt || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="Địa chỉ" :span="2">{{ member.address || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="Địa chỉ" :span="isSmall ? 1 : 2">{{ member.address || '—' }}</el-descriptions-item>
         </el-descriptions>
       </el-card>
     </template>
@@ -157,20 +157,22 @@ onMounted(fetchMember)
   gap: 16px;
 }
 
-.profile-main {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.profile {
+  border-left: 4px solid var(--el-color-primary);
 }
 
-.avatar {
-  font-size: 28px;
-  background: var(--el-color-primary);
+.profile-main {
+  min-width: 0;
 }
 
 .profile-info h2 {
-  margin: 0 0 8px;
+  margin: 0 0 2px;
   font-size: 22px;
+}
+
+.profile-info p {
+  margin: 0 0 10px;
+  font-size: 13px;
 }
 
 .tags,
@@ -185,8 +187,8 @@ onMounted(fetchMember)
 }
 
 @media (max-width: 768px) {
-  .info :deep(.el-descriptions__body .el-descriptions__table) {
-    table-layout: auto;
+  .actions {
+    width: 100%;
   }
 }
 </style>

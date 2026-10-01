@@ -18,7 +18,10 @@ paths:
 - DTO viết bằng Java `record`, đặt theo nhóm chức năng (`dto/auth`, `dto/user`, ...), có hàm tĩnh `from(Entity)` để chuyển đổi; ràng buộc đầu vào bằng Jakarta Validation với `message` tiếng Việt.
 - Danh sách lớn (thành viên, thu, chi) trả về `PageResponse<T>` (`dto/common`, `page` đếm từ 0) — không trả thẳng `Page`. Controller nhận `page`, `size`, `sort`, `direction` bằng `@RequestParam`; service giới hạn `size` ≤ 100 và chỉ cho sắp xếp theo danh sách cột cho phép (xem `MemberService`). Tìm kiếm động dùng `Specification` (repository kế thừa `JpaSpecificationExecutor`, override `findAll(Specification, Pageable)` kèm `@EntityGraph`).
 - Tìm kiếm `LIKE`: escape `%`, `_`, `\` trong từ khóa; collation `utf8mb4_unicode_ci` đã không phân biệt hoa thường và dấu nên không cần `lower()`.
-- **Ngày trong JSON dùng định dạng `dd/MM/yyyy`** (`@JsonFormat(pattern = "dd/MM/yyyy")` trên field `LocalDate` của DTO cả request lẫn response; `LocalDateTime` dùng `dd/MM/yyyy HH:mm`). `@JsonFormat` import từ `com.fasterxml.jackson.annotation`.
+- **Ngày trong JSON dạng `dd/MM/yyyy`**, khai báo bằng hằng trong `dto/common/DateFormats` (`DATE = "dd/MM/uuuu"`, `DATE_TIME = "dd/MM/uuuu HH:mm"`):
+  - Request DTO: `@JsonFormat(pattern = DateFormats.DATE, lenient = OptBoolean.FALSE)` — bắt buộc `lenient = FALSE` để từ chối ngày không có thật (31/02 → 400 thay vì âm thầm thành 28/02). Phải dùng `uuuu`, không dùng `yyyy` (chế độ STRICT với `yyyy` từ chối mọi ngày).
+  - Response DTO: `@JsonFormat(pattern = DateFormats.DATE)` / `DateFormats.DATE_TIME`.
+  - `@JsonFormat`, `OptBoolean` import từ `com.fasterxml.jackson.annotation`.
 - Danh mục cho ô chọn trả `OptionResponse { id, name, description }` (xem `CatalogController`: `/api/roles`, `/api/levels`).
 - Lấy id người đang đăng nhập: `CurrentUser.id(jwt)` (claim `userId`) — dùng id thay vì email vì email có thể bị sửa.
 - Chuẩn hóa input trong service: `trim()`, email về chữ thường, chuỗi rỗng → `null` (cột UNIQUE như `phone`).
