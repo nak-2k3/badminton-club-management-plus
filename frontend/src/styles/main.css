@@ -1,0 +1,23 @@
+/* Màu chủ đạo xanh lá của CLB (ghi đè biến của Element Plus) */
+:root {
+  --el-color-primary: #1d6f42;
+  --el-color-primary-light-3: #4a9b6e;
+  --el-color-primary-light-5: #8ebfa0;
+  --el-color-primary-light-7: #bbd8c6;
+  --el-color-primary-light-8: #d2e5d9;
+  --el-color-primary-light-9: #e8f1ec;
+  --el-color-primary-dark-2: #175935;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f5f7fa;
+  color: #303133;
+}

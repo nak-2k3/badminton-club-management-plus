@@ -35,9 +35,12 @@ public class AuthService {
                 CurrentUserResponse.from(user));
     }
 
+    // Tìm theo userId trong token (không theo email, vì email có thể được admin sửa)
     @Transactional(readOnly = true)
-    public CurrentUserResponse getCurrentUser(String email) {
-        return CurrentUserResponse.from(findByEmail(email));
+    public CurrentUserResponse getCurrentUser(Long userId) {
+        return userRepository.findWithRoleAndLevelById(userId)
+                .map(CurrentUserResponse::from)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản"));
     }
 
     private User findByEmail(String email) {
