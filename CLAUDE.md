@@ -1,0 +1,61 @@
+# CLAUDE.md
+
+Hệ thống quản lý câu lạc bộ cầu lông (tiểu luận). Người dùng giao tiếp bằng tiếng Việt — trả lời bằng tiếng Việt.
+
+## Công nghệ
+- Spring Boot 4.1.1, Java 17, Maven (dùng `mvnw` / `mvnw.cmd`)
+- Spring Web MVC, Spring Data JPA, Spring Security, Validation, Lombok
+- MySQL 9.7, database `badminton_club_plus`
+- Package gốc: `com.badmintonclub.clubmanagement`
+
+## Lệnh thường dùng (Windows)
+```powershell
+.\mvnw.cmd spring-boot:run      # chạy ứng dụng
+.\mvnw.cmd test                 # chạy test
+.\mvnw.cmd clean package        # build jar
+```
+
+## Database
+- **Schema là nguồn chuẩn**: `database/schema.sql` (database-first). Không để Hibernate tự sinh/sửa bảng — dùng `spring.jpa.hibernate.ddl-auto=validate` (hoặc `none`), không dùng `update`/`create`.
+- Thay đổi schema: viết lệnh `ALTER` thành file migration trong `database/`, chạy trên MySQL, rồi xuất lại `schema.sql`:
+  ```powershell
+  & "C:\Program Files\MySQL\MySQL Server 9.7\bin\mysqldump.exe" -u root -p --no-data --set-gtid-purged=OFF badminton_club_plus > database\schema.sql
+  ```
+  Luôn có `--set-gtid-purged=OFF`, nếu không file sẽ lỗi khi import trên máy khác.
+- Dữ liệu danh mục (`roles`, `levels`, `fee_settings`, `courts`) cần có để app chạy được — đặt trong `database/data.sql`.
+- Không commit mật khẩu DB. Trong `application.properties` dùng biến môi trường, ví dụ `spring.datasource.password=${DB_PASSWORD}`.
+
+### Các bảng
+| Bảng | Vai trò |
+|---|---|
+| `users`, `roles`, `levels` | Thành viên, quyền (1 user – 1 role), trình độ |
+| `courts` | **Địa điểm / nhà thi đấu** (địa chỉ, `hourly_rate` giá 1 sân/giờ), không phải 1 sân đơn lẻ |
+| `schedules` | Buổi chơi (`FIXED` cố định / `EXTRA` phát sinh) tại 1 địa điểm, thuê `court_count` sân |
+| `registrations`, `attendances` | Thành viên đăng ký buổi chơi và điểm danh (2 bảng riêng) |
+| `guests`, `guest_registrations` | Khách vãng lai; đăng ký + phí + thu tiền + điểm danh gộp trong 1 bảng |
+| `fee_settings` | Mức phí theo `fee_type`: `MONTHLY` phí tháng (theo giới tính) / `GUEST` phí khách mỗi buổi (như nhau, `gender` = NULL) |
+| `payments` | Khoản thu của thành viên: `MONTHLY` / `EXTRA`, hình thức `CASH` / `BANK_TRANSFER` |
+| `expenses` | Khoản chi, phân loại `category` (`COURT_RENT`, `SHUTTLECOCK`, `EQUIPMENT`, `OTHER`), có thể gắn `schedule_id` |
+
+### Quy tắc nghiệp vụ
+- Giới tính **chỉ có `MALE` và `FEMALE`**. `users.gender` NOT NULL; `guests.gender` cho phép NULL.
+- Mức phí lấy từ `fee_settings` (admin chỉnh trên giao diện), **không hard-code trong Java**: chọn dòng `active = 1` khớp điều kiện, có `effective_from` gần nhất và ≤ ngày áp dụng.
+  - Phí tháng thành viên: `fee_type = MONTHLY` và `gender = users.gender` (bắt buộc có gender).
+  - Phí khách: `fee_type = GUEST` và `gender IS NULL` — một mức chung cho mọi khách, không phụ thuộc `guests.gender`. Chép vào `guest_registrations.fee` lúc đăng ký (để đổi giá sau không ảnh hưởng dữ liệu cũ).
+- Payment `MONTHLY` phải có `month` (1–12) và `year`; không thu trùng 1 tháng cho 1 user (đã có unique + CHECK trong DB).
+- Khi đánh dấu đã thu tiền (`payments.status` hoặc `guest_registrations.payment_status` = `PAID`) phải ghi `paid_at`; với khách ghi thêm `collected_by` (người thu). `invited_by` là thành viên dẫn khách — dùng để truy trách nhiệm khi khách chưa trả.
+- Tiền thuê sân 1 buổi = `courts.hourly_rate` × số giờ (`end_time − start_time`) × `schedules.court_count`. Khoản chi tiền sân ghi vào `expenses` với `category = COURT_RENT` và `schedule_id` của buổi đó.
+- `schedules`: DB đã CHECK `end_time > start_time`; validate thêm ở tầng Java `court_count ≥ 1`, `max_players ≥ 1`.
+- Khi kiểm tra `schedules.max_players`, đếm cả `registrations` (status `REGISTERED`) lẫn `guest_registrations`.
+- Báo cáo thu: tổng `payments` + `guest_registrations` đã `PAID`. Báo cáo chi: `expenses` group theo `category`.
+- Không xóa cứng user — đổi `status` sang `INACTIVE`/`LOCKED` (các bảng khác tham chiếu `users` bằng FK).
+- Cột `phone` có UNIQUE và cho phép NULL: lưu `NULL` khi trống, không lưu chuỗi rỗng.
+
+## Quy ước code
+- Phân tầng: `entity` → `repository` → `service` → `controller`, kèm `dto`, `enums`, `config`, `exception` dưới package gốc.
+- Entity map đúng tên bảng/cột snake_case của schema (`@Table`, `@Column`); khóa chính `Long` với `@GeneratedValue(strategy = GenerationType.IDENTITY)`.
+- Cột `ENUM` của MySQL → Java enum với `@Enumerated(EnumType.STRING)`; tên hằng giống hệt giá trị trong DB. Dùng chung một enum `Gender { MALE, FEMALE }`.
+- `tinyint(1)` → `Boolean`; `decimal` → `BigDecimal`; `date` → `LocalDate`; `time` → `LocalTime`; `datetime` → `LocalDateTime`.
+- Quan hệ `@ManyToOne` dùng `fetch = FetchType.LAZY`. Không trả entity trực tiếp ra controller — dùng DTO.
+- Mật khẩu mã hóa bằng `BCryptPasswordEncoder`.
+- Lombok: dùng `@Getter`/`@Setter` cho entity, tránh `@Data` (gây lỗi `equals`/`hashCode`/`toString` với quan hệ hai chiều).
