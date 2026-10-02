@@ -14,7 +14,7 @@ Giao diện hiện tại đã được người dùng duyệt — tính năng m�
 - **Dễ sử dụng**: mọi chữ, nhãn, thông báo bằng tiếng Việt; thao tác quan trọng (khóa, xóa, đăng xuất...) luôn có hộp xác nhận; lỗi hiện ngay dưới ô nhập; có trạng thái đang tải và trạng thái rỗng; thao tác thường dùng chỉ cần 1–2 lần bấm.
 - **Mobile friendly** (kiểm tra ở ~500px và 1280px): không tràn ngang thân trang; bảng nhiều cột cuộn ngang bên trong khung, cột thao tác cố định bên phải; bộ lọc/nút tự xuống hàng; dialog không rộng quá màn hình; vùng bấm đủ lớn.
 - **Sáng/tối**: mọi màn hình mới phải đọc rõ ở cả 2 chế độ — chỉ dùng biến màu `--el-*`, không viết mã màu cứng.
-- **Nhất quán**: dùng component Element Plus và các mẫu sẵn có (`MemberListView`, `MemberDetailView`, `MemberFormDialog`) làm khuôn cho trang mới; giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
+- **Nhất quán**: dùng component Element Plus và các mẫu sẵn có làm khuôn cho trang mới (danh sách lớn: `MemberListView`/`MemberDetailView`/`MemberFormDialog`; danh sách nhỏ: `CourtListView`; mức phí: `FeeSettingView` — xem `frontend.md`); giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
 - Chi tiết kỹ thuật xem `.claude/rules/frontend.md`.
 
 ## Tính nhất quán & an toàn: một hành động — một quy tắc ở mọi lối vào
@@ -27,6 +27,11 @@ Giao diện hiện tại đã được người dùng duyệt — tính năng m�
 
 ## Luồng một request
 `views/*.vue` → `frontend/src/api/*.js` (instance `http.js` gắn Bearer token) → Vite proxy `/api` → `SecurityConfig` (giải mã JWT, claim `roles` → `ROLE_*`) → `@RestController` → service (`@Transactional`, ném `BusinessException`/`ResourceNotFoundException`) → repository → MySQL. Lỗi đi ngược lại qua `GlobalExceptionHandler` → `ErrorResponse` → `http.js` chuẩn hóa thành `{ status, message, errors }` → view hiện `ElMessage` / lỗi dưới ô nhập.
+
+## Tiến độ hiện tại
+- Đã có entity cho đủ 12 bảng, đã làm xong trọn bộ (service + controller + giao diện) cho: đăng nhập, **thành viên**, **sân**, **mức phí**, **tài khoản của tôi**, **lịch chơi**, **đăng ký tham gia & điểm danh** (thành viên).
+- Chưa làm: khách vãng lai, khoản thu (`payments`), khoản chi (`expenses`), báo cáo. Khi làm, nhớ thêm quy tắc URL vào `SecurityConfig` và cập nhật ma trận quyền trong `security-auth.md`.
+- Đăng nhập thử ở môi trường phát triển: `admin@badmintonclub.local` / `Admin@123` (tạo tự động khi bảng `users` trống).
 
 ## Quy tắc chi tiết: `.claude/rules/`
 | File | Chủ đề | Nạp khi |

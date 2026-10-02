@@ -20,6 +20,18 @@ const routes = [
         meta: { title: 'Trang chủ' }
       },
       {
+        path: 'schedules',
+        name: 'schedules',
+        component: () => import('@/views/schedules/ScheduleListView.vue'),
+        meta: { title: 'Lịch chơi' }
+      },
+      {
+        path: 'schedules/:id(\\d+)',
+        name: 'schedule-detail',
+        component: () => import('@/views/schedules/ScheduleDetailView.vue'),
+        meta: { title: 'Chi tiết buổi chơi', menu: '/schedules' }
+      },
+      {
         path: 'members',
         name: 'members',
         component: () => import('@/views/members/MemberListView.vue'),

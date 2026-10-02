@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import {
   House,
+  Calendar,
   ArrowDown,
   SwitchButton,
   UserFilled,
@@ -27,6 +28,7 @@ const { isSmall } = useBreakpoint(768)
 // Menu bên trái; mục có roles chỉ hiện với các vai trò đó
 const menuItems = [
   { path: '/', title: 'Trang chủ', icon: House },
+  { path: '/schedules', title: 'Lịch chơi', icon: Calendar },
   { path: '/members', title: 'Thành viên', icon: UserFilled, roles: ['ADMIN'] },
   { path: '/courts', title: 'Sân', icon: Location, roles: ['ADMIN'] },
   { path: '/fees', title: 'Mức phí', icon: Money, roles: ['ADMIN', 'TREASURER'] },

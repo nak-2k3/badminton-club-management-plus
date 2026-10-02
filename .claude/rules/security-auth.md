@@ -23,6 +23,8 @@ paths:
   | `/api/members/**` | ADMIN | ADMIN |
   | `/api/courts/**` | mọi người đã đăng nhập | ADMIN |
   | `/api/fee-settings/**` | ADMIN, TREASURER | ADMIN |
+  | `/api/schedules/**` (gồm `/{id}/participants`) | mọi người đã đăng nhập | ADMIN (thêm/bớt người khác, điểm danh) |
+  | `/api/schedules/*/registrations/me` | — | mọi người đã đăng nhập (tự đăng ký / tự hủy của chính mình) |
   | `/api/account/**`, `/api/auth/me`, `/api/roles`, `/api/levels` | mọi người đã đăng nhập | chính chủ (`/api/account`) |
 - Admin không được tự hạ vai trò, tự đổi email, tự đặt lại mật khẩu, hay tự khóa/ngừng hoạt động tài khoản của chính mình qua `/api/members` (chặn ở `MemberService`, giao diện ẩn nút và dẫn sang Tài khoản của tôi). Thao tác nhạy cảm trên chính tài khoản mình (đổi email, đổi mật khẩu) đi qua `/api/account/*` và bắt buộc xác nhận mật khẩu hiện tại.
 - Phía frontend: menu và route guard dựa trên `auth.user.role` lấy lúc tải trang; nếu vai trò bị đổi khi đang mở trang, giao diện chỉ cập nhật sau khi tải lại, nhưng backend đã chặn/cho phép đúng ngay.

@@ -78,6 +78,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/courts/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/fee-settings/**").hasAnyRole("ADMIN", "TREASURER")
                         .requestMatchers("/api/fee-settings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/**").authenticated()
+                        // Tự đăng ký / tự hủy của chính mình: mọi vai trò (đặt trước quy tắc ADMIN bên dưới)
+                        .requestMatchers("/api/schedules/*/registrations/me").authenticated()
+                        .requestMatchers("/api/schedules/**").hasRole("ADMIN")
                         // /api/account/**, /api/roles, /api/levels: mọi người đã đăng nhập (anyRequest bên dưới)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -3,8 +3,15 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { UserFilled, CircleCheck, Lock, CircleClose, ArrowRight } from '@element-plus/icons-vue'
 import { memberApi } from '@/api/members'
+import { scheduleApi } from '@/api/schedules'
 import { useAuthStore } from '@/stores/auth'
-import { ROLE_LABELS, GENDER_LABELS } from '@/utils/labels'
+import {
+  ROLE_LABELS,
+  GENDER_LABELS,
+  SCHEDULE_STATUS_LABELS,
+  SCHEDULE_STATUS_TAG_TYPES
+} from '@/utils/labels'
+import { todayText, weekdayOf } from '@/utils/format'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -43,11 +50,37 @@ async function loadStats() {
   }
 }
 
+// Buổi sắp tới tôi đã đăng ký (mọi vai trò); hiện cả buổi bị hủy để thành viên biết
+const UPCOMING_SIZE = 5
+const upcoming = ref([])
+const upcomingTotal = ref(0)
+const upcomingLoading = ref(false)
+const upcomingError = ref(false)
+
+async function loadUpcoming() {
+  upcomingLoading.value = true
+  upcomingError.value = false
+  try {
+    const res = await scheduleApi.search({ mine: true, from: todayText(), size: UPCOMING_SIZE })
+    upcoming.value = res.content
+    upcomingTotal.value = res.totalElements
+  } catch {
+    upcomingError.value = true
+  } finally {
+    upcomingLoading.value = false
+  }
+}
+
+function openSchedule(schedule) {
+  router.push({ name: 'schedule-detail', params: { id: schedule.id } })
+}
+
 function openMembers(card) {
   router.push({ name: 'members', query: card.status ? { status: card.status } : {} })
 }
 
 onMounted(() => {
+  loadUpcoming()
   if (isAdmin.value) loadStats()
 })
 </script>
@@ -60,6 +93,55 @@ onMounted(() => {
         <p class="text-secondary">{{ today }}</p>
       </div>
       <el-tag effect="plain" round size="large">{{ ROLE_LABELS[auth.role] ?? auth.role }}</el-tag>
+    </el-card>
+
+    <el-card shadow="never" class="upcoming">
+      <template #header>
+        <div class="card-header">
+          <span>Buổi sắp tới của tôi</span>
+          <el-button link type="primary" @click="router.push({ name: 'schedules' })">
+            Xem lịch chơi <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+          </el-button>
+        </div>
+      </template>
+      <el-skeleton v-if="upcomingLoading" :rows="2" animated />
+      <el-result v-else-if="upcomingError" icon="error" title="Không tải được lịch của bạn">
+        <template #extra><el-button @click="loadUpcoming">Thử lại</el-button></template>
+      </el-result>
+      <el-empty v-else-if="!upcoming.length" :image-size="72" description="Bạn chưa đăng ký buổi chơi nào sắp tới">
+        <el-button type="primary" @click="router.push({ name: 'schedules' })">Tìm buổi để đăng ký</el-button>
+      </el-empty>
+      <template v-else>
+        <button
+          v-for="item in upcoming"
+          :key="item.id"
+          type="button"
+          class="upcoming-item"
+          :class="{ cancelled: item.status === 'CANCELLED' }"
+          @click="openSchedule(item)"
+        >
+          <span class="upcoming-date">
+            <span class="weekday">{{ weekdayOf(item.playDate) }}</span>
+            <span class="day">{{ item.playDate.slice(0, 5) }}</span>
+          </span>
+          <span class="upcoming-body">
+            <span class="upcoming-title">{{ item.title }}</span>
+            <span class="text-secondary">{{ item.startTime }} – {{ item.endTime }} · {{ item.courtName }}</span>
+          </span>
+          <el-tag :type="SCHEDULE_STATUS_TAG_TYPES[item.status]" size="small" round disable-transitions>
+            {{ SCHEDULE_STATUS_LABELS[item.status] }}
+          </el-tag>
+        </button>
+        <el-button
+          v-if="upcomingTotal > UPCOMING_SIZE"
+          link
+          type="primary"
+          class="more"
+          @click="router.push({ name: 'schedules', query: { mine: 'true', from: todayText() } })"
+        >
+          Xem tất cả {{ upcomingTotal }} buổi
+        </el-button>
+      </template>
     </el-card>
 
     <template v-if="isAdmin">
@@ -229,7 +311,91 @@ onMounted(() => {
   transform: translateX(3px);
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: none;
+  color: var(--el-text-color-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.upcoming-item:last-of-type {
+  border-bottom: none;
+}
+
+.upcoming-item:hover {
+  background: var(--el-fill-color-light);
+}
+
+.upcoming-item:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: -2px;
+}
+
+.upcoming-item.cancelled .upcoming-title {
+  text-decoration: line-through;
+  color: var(--el-text-color-secondary);
+}
+
+.upcoming-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56px;
+  flex-shrink: 0;
+  padding: 4px 0;
+  border-radius: 8px;
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.upcoming-date .weekday {
+  font-size: 11px;
+}
+
+.upcoming-date .day {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.upcoming-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.upcoming-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  margin-top: 8px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .upcoming-item,
   .stat-card,
   .stat-arrow {
     transition: none;

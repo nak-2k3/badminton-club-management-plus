@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -30,8 +29,8 @@ public class Registration {
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
-    @CreationTimestamp
-    @Column(name = "registered_at", updatable = false)
+    // Gán trong RegistrationService: hủy rồi đăng ký lại thì cập nhật thành thời điểm đăng ký lại
+    @Column(name = "registered_at")
     private LocalDateTime registeredAt;
 
     @Enumerated(EnumType.STRING)

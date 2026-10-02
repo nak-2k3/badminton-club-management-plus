@@ -34,6 +34,37 @@ export const FEE_TYPE_LABELS = {
   GUEST: 'Phí khách'
 }
 
+export const SCHEDULE_TYPE_LABELS = {
+  FIXED: 'Cố định',
+  EXTRA: 'Phát sinh'
+}
+
+export const SCHEDULE_STATUS_LABELS = {
+  OPEN: 'Đang mở đăng ký',
+  CLOSED: 'Đã đóng đăng ký',
+  COMPLETED: 'Đã hoàn thành',
+  CANCELLED: 'Đã hủy'
+}
+
+export const SCHEDULE_STATUS_TAG_TYPES = {
+  OPEN: 'success',
+  CLOSED: 'warning',
+  COMPLETED: 'info',
+  CANCELLED: 'danger'
+}
+
+export const ATTENDANCE_STATUS_LABELS = {
+  NOT_MARKED: 'Chưa điểm danh',
+  PRESENT: 'Có mặt',
+  ABSENT: 'Vắng'
+}
+
+export const ATTENDANCE_STATUS_TAG_TYPES = {
+  NOT_MARKED: 'info',
+  PRESENT: 'success',
+  ABSENT: 'danger'
+}
+
 // Chuyển object nhãn thành danh sách cho el-select
 export const toOptions = (labels) =>
   Object.entries(labels).map(([value, label]) => ({ value, label }))

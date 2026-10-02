@@ -18,6 +18,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.MismatchedInputException;
 
+import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,12 +45,16 @@ public class GlobalExceptionHandler {
             String field = path.get(path.size() - 1).getPropertyName();
             if (field != null) {
                 // Nhận biết trường ngày theo kiểu đích (LocalDate, LocalDateTime...), không theo tên trường
-                boolean isDateField = jacksonEx instanceof MismatchedInputException mismatch
-                        && mismatch.getTargetType() != null
-                        && Temporal.class.isAssignableFrom(mismatch.getTargetType());
-                String message = isDateField
-                        ? "Ngày không hợp lệ (định dạng dd/MM/yyyy)"
-                        : "Giá trị không hợp lệ";
+                Class<?> targetType = jacksonEx instanceof MismatchedInputException mismatch
+                        ? mismatch.getTargetType() : null;
+                String message;
+                if (targetType != null && LocalTime.class.isAssignableFrom(targetType)) {
+                    message = "Giờ không hợp lệ (định dạng HH:mm)";
+                } else if (targetType != null && Temporal.class.isAssignableFrom(targetType)) {
+                    message = "Ngày không hợp lệ (định dạng dd/MM/yyyy)";
+                } else {
+                    message = "Giá trị không hợp lệ";
+                }
                 return build(HttpStatus.BAD_REQUEST, "Dữ liệu không hợp lệ", Map.of(field, message));
             }
         }

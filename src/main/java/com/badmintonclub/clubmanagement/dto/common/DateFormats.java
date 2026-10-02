@@ -10,6 +10,8 @@ public final class DateFormats {
 
     public static final String DATE = "dd/MM/uuuu";
     public static final String DATE_TIME = "dd/MM/uuuu HH:mm";
+    // Giờ chơi (LocalTime), vd "18:30"
+    public static final String TIME = "HH:mm";
 
     private DateFormats() {
     }
