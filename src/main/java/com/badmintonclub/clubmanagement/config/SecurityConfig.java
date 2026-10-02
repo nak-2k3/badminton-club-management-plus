@@ -74,6 +74,11 @@ public class SecurityConfig {
                         // Chặn theo URL trước khi đọc body (nếu chỉ dùng @PreAuthorize, @Valid chạy trước
                         // và người không có quyền vẫn nhận lỗi 400 kèm chi tiết từng trường)
                         .requestMatchers("/api/members/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/courts/**").authenticated()
+                        .requestMatchers("/api/courts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/fee-settings/**").hasAnyRole("ADMIN", "TREASURER")
+                        .requestMatchers("/api/fee-settings/**").hasRole("ADMIN")
+                        // /api/account/**, /api/roles, /api/levels: mọi người đã đăng nhập (anyRequest bên dưới)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         // Đối chiếu DB mỗi request: chặn tài khoản bị khóa, lấy vai trò hiện tại

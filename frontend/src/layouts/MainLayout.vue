@@ -2,7 +2,18 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
-import { House, ArrowDown, SwitchButton, UserFilled, User, Fold, Expand } from '@element-plus/icons-vue'
+import {
+  House,
+  ArrowDown,
+  SwitchButton,
+  UserFilled,
+  User,
+  Fold,
+  Expand,
+  Location,
+  Money,
+  Setting
+} from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
@@ -16,7 +27,10 @@ const { isSmall } = useBreakpoint(768)
 // Menu bên trái; mục có roles chỉ hiện với các vai trò đó
 const menuItems = [
   { path: '/', title: 'Trang chủ', icon: House },
-  { path: '/members', title: 'Thành viên', icon: UserFilled, roles: ['ADMIN'] }
+  { path: '/members', title: 'Thành viên', icon: UserFilled, roles: ['ADMIN'] },
+  { path: '/courts', title: 'Sân', icon: Location, roles: ['ADMIN'] },
+  { path: '/fees', title: 'Mức phí', icon: Money, roles: ['ADMIN', 'TREASURER'] },
+  { path: '/account', title: 'Tài khoản của tôi', icon: Setting }
 ]
 
 // Trang con (vd chi tiết thành viên) khai báo meta.menu để menu cha vẫn được tô sáng
@@ -105,7 +119,10 @@ async function handleLogout() {
                     <div class="text-secondary">{{ ROLE_LABELS[auth.role] ?? auth.role }}</div>
                   </div>
                 </el-dropdown-item>
-                <el-dropdown-item :icon="SwitchButton" divided @click="handleLogout">Đăng xuất</el-dropdown-item>
+                <el-dropdown-item :icon="Setting" divided @click="router.push({ name: 'account' })">
+                  Tài khoản của tôi
+                </el-dropdown-item>
+                <el-dropdown-item :icon="SwitchButton" @click="handleLogout">Đăng xuất</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>

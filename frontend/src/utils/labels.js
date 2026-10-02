@@ -29,6 +29,11 @@ export const USER_STATUS_TAG_TYPES = {
   LOCKED: 'danger'
 }
 
+export const FEE_TYPE_LABELS = {
+  MONTHLY: 'Phí tháng',
+  GUEST: 'Phí khách'
+}
+
 // Chuyển object nhãn thành danh sách cho el-select
 export const toOptions = (labels) =>
   Object.entries(labels).map(([value, label]) => ({ value, label }))

@@ -2,6 +2,7 @@ package com.badmintonclub.clubmanagement.dto.member;
 
 import com.badmintonclub.clubmanagement.enums.Gender;
 import com.badmintonclub.clubmanagement.dto.common.DateFormats;
+import com.badmintonclub.clubmanagement.dto.common.Validation;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import jakarta.validation.constraints.*;
@@ -19,7 +20,7 @@ public record MemberUpdateRequest(
         @Size(max = 100, message = "Email tối đa 100 ký tự")
         String email,
 
-        @Pattern(regexp = MemberValidation.PHONE_REGEX, message = MemberValidation.PHONE_MESSAGE)
+        @Pattern(regexp = Validation.PHONE_REGEX, message = Validation.PHONE_MESSAGE)
         String phone,
 
         @NotNull(message = "Vui lòng chọn giới tính")

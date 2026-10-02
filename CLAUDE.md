@@ -9,6 +9,14 @@ Hệ thống quản lý câu lạc bộ cầu lông (tiểu luận). Người d�
 - **Frontend** (`frontend/`): Vue 3 + Vite + Element Plus, chạy ở `:5173`.
 - **Database**: MySQL `badminton_club_plus`, schema chuẩn ở `database/schema.sql`.
 
+## Nguyên tắc giao diện: dễ sử dụng, thân thiện với điện thoại
+Giao diện hiện tại đã được người dùng duyệt — tính năng mới phải giữ cùng phong cách và mức độ hoàn thiện:
+- **Dễ sử dụng**: mọi chữ, nhãn, thông báo bằng tiếng Việt; thao tác quan trọng (khóa, xóa, đăng xuất...) luôn có hộp xác nhận; lỗi hiện ngay dưới ô nhập; có trạng thái đang tải và trạng thái rỗng; thao tác thường dùng chỉ cần 1–2 lần bấm.
+- **Mobile friendly** (kiểm tra ở ~500px và 1280px): không tràn ngang thân trang; bảng nhiều cột cuộn ngang bên trong khung, cột thao tác cố định bên phải; bộ lọc/nút tự xuống hàng; dialog không rộng quá màn hình; vùng bấm đủ lớn.
+- **Sáng/tối**: mọi màn hình mới phải đọc rõ ở cả 2 chế độ — chỉ dùng biến màu `--el-*`, không viết mã màu cứng.
+- **Nhất quán**: dùng component Element Plus và các mẫu sẵn có (`MemberListView`, `MemberDetailView`, `MemberFormDialog`) làm khuôn cho trang mới; giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
+- Chi tiết kỹ thuật xem `.claude/rules/frontend.md`.
+
 ## Luồng một request
 `views/*.vue` → `frontend/src/api/*.js` (instance `http.js` gắn Bearer token) → Vite proxy `/api` → `SecurityConfig` (giải mã JWT, claim `roles` → `ROLE_*`) → `@RestController` → service (`@Transactional`, ném `BusinessException`/`ResourceNotFoundException`) → repository → MySQL. Lỗi đi ngược lại qua `GlobalExceptionHandler` → `ErrorResponse` → `http.js` chuẩn hóa thành `{ status, message, errors }` → view hiện `ElMessage` / lỗi dưới ô nhập.
 

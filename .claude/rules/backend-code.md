@@ -22,6 +22,9 @@ paths:
   - Request DTO: `@JsonFormat(pattern = DateFormats.DATE, lenient = OptBoolean.FALSE)` — bắt buộc `lenient = FALSE` để từ chối ngày không có thật (31/02 → 400 thay vì âm thầm thành 28/02). Phải dùng `uuuu`, không dùng `yyyy` (chế độ STRICT với `yyyy` từ chối mọi ngày).
   - Response DTO: `@JsonFormat(pattern = DateFormats.DATE)` / `DateFormats.DATE_TIME`.
   - `@JsonFormat`, `OptBoolean` import từ `com.fasterxml.jackson.annotation`.
+- DTO dùng chung trong `dto/common`: `ActiveRequest { active }` cho API bật/tắt (`PATCH /{id}/active`), `Validation.PHONE_REGEX/PHONE_MESSAGE` cho số điện thoại, `DateFormats`, `PageResponse`, `OptionResponse`.
+- Danh sách nhỏ (sân, mức phí) trả `List<...>` không phân trang; lọc/tìm trong service.
+- Tiền (`decimal`) nhận/trả `BigDecimal`, validate `@NotNull @DecimalMin("0") @Digits(integer = 10, fraction = 2)`.
 - Danh mục cho ô chọn trả `OptionResponse { id, name, description }` (xem `CatalogController`: `/api/roles`, `/api/levels`).
 - Lấy id người đang đăng nhập: `CurrentUser.id(jwt)` (claim `userId`) — dùng id thay vì email vì email có thể bị sửa.
 - Chuẩn hóa input trong service: `trim()`, email về chữ thường, chuỗi rỗng → `null` (cột UNIQUE như `phone`).

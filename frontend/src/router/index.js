@@ -30,6 +30,24 @@ const routes = [
         name: 'member-detail',
         component: () => import('@/views/members/MemberDetailView.vue'),
         meta: { title: 'Chi tiết thành viên', roles: ['ADMIN'], menu: '/members' }
+      },
+      {
+        path: 'courts',
+        name: 'courts',
+        component: () => import('@/views/courts/CourtListView.vue'),
+        meta: { title: 'Quản lý sân', roles: ['ADMIN'] }
+      },
+      {
+        path: 'fees',
+        name: 'fees',
+        component: () => import('@/views/fees/FeeSettingView.vue'),
+        meta: { title: 'Mức phí', roles: ['ADMIN', 'TREASURER'] }
+      },
+      {
+        path: 'account',
+        name: 'account',
+        component: () => import('@/views/account/AccountView.vue'),
+        meta: { title: 'Tài khoản của tôi' }
       }
       // Thêm trang mới ở đây; giới hạn quyền bằng meta: { roles: ['ADMIN', 'TREASURER'] }
     ]
