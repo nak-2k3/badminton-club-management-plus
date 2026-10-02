@@ -73,6 +73,36 @@ async function saveProfile() {
   }
 }
 
+// ----- Đổi email đăng nhập (cần mật khẩu hiện tại) -----
+const emailFormRef = ref()
+const savingEmail = ref(false)
+const emailForm = reactive({ newEmail: '', currentPassword: '' })
+const emailErrors = reactive({})
+const emailRules = {
+  newEmail: [
+    { required: true, message: 'Vui lòng nhập email mới', trigger: 'blur' },
+    { type: 'email', message: 'Email không hợp lệ', trigger: 'blur' }
+  ],
+  currentPassword: [{ required: true, message: 'Vui lòng nhập mật khẩu hiện tại', trigger: 'blur' }]
+}
+
+async function changeEmail() {
+  Object.keys(emailErrors).forEach((key) => delete emailErrors[key])
+  if (!(await emailFormRef.value.validate().catch(() => false))) return
+  savingEmail.value = true
+  try {
+    profile.value = await accountApi.changeEmail(emailForm.newEmail.trim(), emailForm.currentPassword)
+    emailFormRef.value.resetFields()
+    auth.fetchMe().catch(() => {}) // cập nhật email trên menu tài khoản
+    ElMessage.success(`Đã đổi email đăng nhập thành ${profile.value.email}. Lần sau hãy đăng nhập bằng email mới.`)
+  } catch (err) {
+    Object.assign(emailErrors, err.errors)
+    ElMessage.error(err.message)
+  } finally {
+    savingEmail.value = false
+  }
+}
+
 // ----- Đổi mật khẩu -----
 const passwordFormRef = ref()
 const savingPassword = ref(false)
@@ -154,8 +184,9 @@ onMounted(loadProfile)
                   </el-form-item>
                 </el-col>
                 <el-col :xs="24" :sm="12">
-                  <el-form-item label="Email (dùng để đăng nhập)">
+                  <el-form-item label="Email đăng nhập">
                     <el-input :model-value="profile.email" disabled />
+                    <div class="text-secondary field-hint">Đổi email ở mục "Đổi email đăng nhập"</div>
                   </el-form-item>
                 </el-col>
                 <el-col :xs="24" :sm="12">
@@ -189,13 +220,37 @@ onMounted(loadProfile)
                   </el-form-item>
                 </el-col>
               </el-row>
-              <p class="text-secondary hint">Email, vai trò và trình độ do quản trị viên quản lý.</p>
+              <p class="text-secondary hint">Vai trò, trình độ và ngày tham gia do quản trị viên quản lý.</p>
               <el-button type="primary" native-type="submit" :loading="savingProfile">Lưu thông tin</el-button>
             </el-form>
           </el-card>
         </el-col>
 
         <el-col :xs="24" :lg="10">
+          <el-card shadow="never" class="section">
+            <template #header>Đổi email đăng nhập</template>
+            <el-form
+              ref="emailFormRef"
+              :model="emailForm"
+              :rules="emailRules"
+              label-position="top"
+              @submit.prevent="changeEmail"
+            >
+              <el-form-item label="Email mới" prop="newEmail" :error="emailErrors.newEmail">
+                <el-input v-model.trim="emailForm.newEmail" maxlength="100" placeholder="email@example.com" autocomplete="email" />
+              </el-form-item>
+              <el-form-item label="Mật khẩu hiện tại (để xác nhận)" prop="currentPassword" :error="emailErrors.currentPassword">
+                <el-input
+                  v-model="emailForm.currentPassword"
+                  type="password"
+                  show-password
+                  autocomplete="current-password"
+                />
+              </el-form-item>
+              <el-button type="primary" native-type="submit" :loading="savingEmail">Đổi email</el-button>
+            </el-form>
+          </el-card>
+
           <el-card shadow="never" class="section">
             <template #header>Đổi mật khẩu</template>
             <el-form
@@ -280,5 +335,10 @@ onMounted(loadProfile)
 
 .hint {
   margin: 0 0 12px;
+}
+
+.field-hint {
+  line-height: 1.4;
+  margin-top: 4px;
 }
 </style>

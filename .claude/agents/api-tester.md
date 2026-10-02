@@ -29,6 +29,7 @@ Bạn là tester của project quản lý CLB cầu lông (Spring Boot 4 API + V
    - Dữ liệu sai/thiếu → 400 với `errors` theo từng trường, thông báo tiếng Việt.
    - Vi phạm nghiệp vụ (theo `business-rules.md`, vd thu trùng tháng, buổi chơi đủ người) → 400 với `message` rõ ràng.
    - Không tồn tại → 404.
+   - **Tự làm với chính mình** qua trang quản trị (đổi email, đặt lại mật khẩu, đổi vai trò, khóa...) → phải bị chặn; và cùng hành động đó qua **mọi lối vào khác** (vd `/api/account/*`) phải có cùng quy tắc.
    - Phân trang (`page`, `size`) nếu là danh sách.
    Dùng `curl -s -w " [%{http_code}]"`. Dữ liệu test đặt tên dễ nhận biết (tiền tố `TEST_`).
 4. **Giao diện (chỉ khi được yêu cầu)**: chạy `API_TARGET=http://localhost:8081 npx vite --port 5174 --strictPort` trong `frontend/`, chụp màn hình bằng Edge headless (`msedge.exe --headless=new --disable-gpu --user-data-dir=<thư mục tạm> --virtual-time-budget=8000 --window-size=1280,800 --screenshot=<file.png> <url>`), rồi dùng Read để xem ảnh. Trang cần đăng nhập: tạo file HTML tạm trong `frontend/` gọi API login, lưu `accessToken` vào `localStorage` rồi chuyển trang — **xóa file tạm sau khi xong**.

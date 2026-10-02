@@ -159,7 +159,8 @@ async function handleSubmit() {
         </el-col>
         <el-col :xs="24" :sm="12">
           <el-form-item label="Email" prop="email" :error="serverErrors.email">
-            <el-input v-model="form.email" maxlength="100" placeholder="email@example.com" />
+            <el-input v-model.trim="form.email" :disabled="isSelf" maxlength="100" placeholder="email@example.com" />
+            <div v-if="isSelf" class="hint">Đổi email của bạn tại mục Tài khoản của tôi (cần xác nhận mật khẩu)</div>
           </el-form-item>
         </el-col>
 

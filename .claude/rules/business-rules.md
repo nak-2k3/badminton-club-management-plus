@@ -31,5 +31,7 @@
 - Không xóa cứng user — đổi `status` sang `INACTIVE`/`LOCKED` (các bảng khác tham chiếu `users` bằng FK).
 - **Sân**: tên sân không trùng (không phân biệt hoa thường/dấu). Chỉ xóa được sân chưa có lịch chơi; đã có lịch thì **tạm ngưng** (`active = 0`) — sân tạm ngưng không được chọn khi tạo lịch mới, lịch cũ giữ nguyên.
 - **Mức phí**: đổi giá bằng cách **thêm dòng mới** với `effective_from` mới (giữ lịch sử), không sửa đè; không xóa mức phí, chỉ ngưng (`active = 0`) — khi ngưng, mức trước đó tự áp dụng lại. Không được có 2 dòng active trùng `fee_type` + `gender` + `effective_from`. Mức đang áp dụng tính bằng `FeeSettingService.findEffective(feeType, gender, date)` — dùng hàm này khi tạo học phí tháng / phí khách.
-- **Tài khoản của tôi**: người dùng tự sửa họ tên, SĐT, giới tính, ngày sinh, địa chỉ; email, vai trò, trình độ, trạng thái, ngày tham gia chỉ ADMIN sửa. Đổi mật khẩu phải nhập đúng mật khẩu hiện tại, mật khẩu mới khác mật khẩu cũ.
+- **Tài khoản của tôi** (mọi vai trò): tự sửa họ tên, SĐT, giới tính, ngày sinh, địa chỉ; vai trò, trình độ, trạng thái, ngày tham gia chỉ ADMIN sửa.
+  - **Email đăng nhập của chính mình chỉ đổi ở đây** (`PATCH /api/account/email`) và **bắt buộc nhập mật khẩu hiện tại**; email mới khác email cũ, không trùng người khác (chuẩn hóa chữ thường). Ở Quản lý thành viên, ADMIN **không** đổi được email của chính mình (backend chặn, giao diện khóa ô) — chỉ đổi email của người khác. Lý do: email là tên đăng nhập, đổi không cần mật khẩu thì người dùng máy đang đăng nhập sẵn có thể chiếm tài khoản.
+  - Đổi mật khẩu phải nhập đúng mật khẩu hiện tại, mật khẩu mới khác mật khẩu cũ.
 - Cột `phone` có UNIQUE và cho phép NULL: lưu `NULL` khi trống, không lưu chuỗi rỗng.

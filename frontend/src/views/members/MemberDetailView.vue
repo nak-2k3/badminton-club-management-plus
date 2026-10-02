@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Edit, Key, Lock, Unlock, CircleClose } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Key, Lock, Unlock, CircleClose, Setting } from '@element-plus/icons-vue'
 import { memberApi } from '@/api/members'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberActions } from '@/composables/useMemberActions'
@@ -96,7 +96,11 @@ onMounted(fetchMember)
         </div>
         <div class="actions">
           <el-button type="primary" :icon="Edit" @click="formVisible = true">Sửa thông tin</el-button>
-          <el-button :icon="Key" @click="passwordVisible = true">Đặt lại mật khẩu</el-button>
+          <!-- Mật khẩu/email của chính mình đổi ở Tài khoản của tôi (cần mật khẩu hiện tại) -->
+          <el-button v-if="isSelf" :icon="Setting" @click="router.push({ name: 'account' })">
+            Đổi email, mật khẩu
+          </el-button>
+          <el-button v-else :icon="Key" @click="passwordVisible = true">Đặt lại mật khẩu</el-button>
           <template v-if="!isSelf">
             <el-button v-if="member.status !== 'ACTIVE'" type="success" plain :icon="Unlock" @click="handleStatus('ACTIVE')">
               Kích hoạt

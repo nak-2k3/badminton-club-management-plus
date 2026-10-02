@@ -68,8 +68,9 @@ public class MemberController {
 
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> resetPassword(@PathVariable Long id,
-                                              @Valid @RequestBody ResetPasswordRequest request) {
-        memberService.resetPassword(id, request.newPassword());
+                                              @Valid @RequestBody ResetPasswordRequest request,
+                                              @AuthenticationPrincipal Jwt jwt) {
+        memberService.resetPassword(id, request.newPassword(), CurrentUser.id(jwt));
         return ResponseEntity.noContent().build();
     }
 }

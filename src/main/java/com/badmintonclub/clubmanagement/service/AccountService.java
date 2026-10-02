@@ -1,5 +1,6 @@
 package com.badmintonclub.clubmanagement.service;
 
+import com.badmintonclub.clubmanagement.dto.account.ChangeEmailRequest;
 import com.badmintonclub.clubmanagement.dto.account.ChangePasswordRequest;
 import com.badmintonclub.clubmanagement.dto.account.ProfileUpdateRequest;
 import com.badmintonclub.clubmanagement.dto.member.MemberResponse;
@@ -52,6 +53,27 @@ public class AccountService {
             throw new BusinessException("newPassword", "Mật khẩu mới phải khác mật khẩu hiện tại");
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    /**
+     * Email là tên đăng nhập nên chỉ đổi được ở đây, kèm mật khẩu hiện tại (chống chiếm tài khoản
+     * khi máy đang đăng nhập sẵn). Phiên hiện tại vẫn dùng tiếp được vì hệ thống nhận diện theo userId.
+     */
+    @Transactional
+    public MemberResponse changeEmail(Long userId, ChangeEmailRequest request) {
+        User user = findUser(userId);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new BusinessException("currentPassword", "Mật khẩu hiện tại không đúng");
+        }
+        String newEmail = request.newEmail().trim().toLowerCase();
+        if (newEmail.equals(user.getEmail())) {
+            throw new BusinessException("newEmail", "Email mới phải khác email hiện tại");
+        }
+        if (userRepository.existsByEmailAndIdNot(newEmail, userId)) {
+            throw new BusinessException("newEmail", "Email " + newEmail + " đã được sử dụng");
+        }
+        user.setEmail(newEmail);
+        return MemberResponse.from(user);
     }
 
     private User findUser(Long userId) {

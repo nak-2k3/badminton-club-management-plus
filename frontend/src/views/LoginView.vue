@@ -63,7 +63,7 @@ async function handleLogin() {
       >
         <el-form-item label="Email" prop="email" :error="serverErrors.email">
           <el-input
-            v-model="form.email"
+            v-model.trim="form.email"
             :prefix-icon="User"
             placeholder="email@example.com"
             autocomplete="username"

@@ -25,6 +25,7 @@ Bạn là người review code cho project quản lý CLB cầu lông (Spring Bo
 **Bảo mật**
 - Endpoint mới có `@PreAuthorize` đúng vai trò (ADMIN / TREASURER / MEMBER); MEMBER không xem/sửa được dữ liệu của người khác.
 - Không thêm endpoint public ngoài `SecurityConfig`; không lộ `password` trong DTO trả về.
+- **Nhất quán giữa các lối vào** (xem mục "Tính nhất quán & an toàn" trong `CLAUDE.md`): với mỗi hành động bị thay đổi, grep mọi endpoint/service khác cũng ghi cùng dữ liệu đó và kiểm tra chúng áp cùng quy tắc. Trang quản trị phải chặn ở backend khi thao tác nhạy cảm (email, mật khẩu, vai trò, trạng thái) nhắm vào chính người đang đăng nhập.
 - Không ghi mật khẩu/secret thật vào file.
 
 **Backend**

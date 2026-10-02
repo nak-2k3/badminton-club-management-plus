@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Search, View, Edit, MoreFilled } from '@element-plus/icons-vue'
+import { Plus, Search, View, Edit, MoreFilled, Setting } from '@element-plus/icons-vue'
 import { memberApi } from '@/api/members'
 import { useCatalogStore } from '@/stores/catalog'
 import { useAuthStore } from '@/stores/auth'
@@ -254,17 +254,17 @@ onMounted(async () => {
               <el-tooltip content="Sửa" :show-after="500">
                 <el-button :icon="Edit" link type="primary" @click="openEdit(row)" />
               </el-tooltip>
-              <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, row)">
-                <el-button :icon="MoreFilled" link />
+              <!-- Dòng của chính mình: không có thao tác trạng thái / đặt lại mật khẩu (làm ở Tài khoản của tôi) -->
+              <el-tooltip v-if="isSelf(row)" content="Đổi email, mật khẩu tại Tài khoản của tôi" :show-after="300">
+                <el-button :icon="Setting" link aria-label="Tài khoản của tôi" @click="router.push({ name: 'account' })" />
+              </el-tooltip>
+              <el-dropdown v-else trigger="click" @command="(cmd) => handleCommand(cmd, row)">
+                <el-button :icon="MoreFilled" link aria-label="Thao tác khác" />
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item v-if="row.status !== 'ACTIVE'" command="ACTIVE">Kích hoạt</el-dropdown-item>
-                    <el-dropdown-item v-if="row.status !== 'LOCKED' && !isSelf(row)" command="LOCKED">
-                      Khóa tài khoản
-                    </el-dropdown-item>
-                    <el-dropdown-item v-if="row.status !== 'INACTIVE' && !isSelf(row)" command="INACTIVE">
-                      Ngừng hoạt động
-                    </el-dropdown-item>
+                    <el-dropdown-item v-if="row.status !== 'LOCKED'" command="LOCKED">Khóa tài khoản</el-dropdown-item>
+                    <el-dropdown-item v-if="row.status !== 'INACTIVE'" command="INACTIVE">Ngừng hoạt động</el-dropdown-item>
                     <el-dropdown-item command="password" divided>Đặt lại mật khẩu</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>

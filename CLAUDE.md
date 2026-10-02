@@ -17,6 +17,14 @@ Giao diện hiện tại đã được người dùng duyệt — tính năng m�
 - **Nhất quán**: dùng component Element Plus và các mẫu sẵn có (`MemberListView`, `MemberDetailView`, `MemberFormDialog`) làm khuôn cho trang mới; giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
 - Chi tiết kỹ thuật xem `.claude/rules/frontend.md`.
 
+## Tính nhất quán & an toàn: một hành động — một quy tắc ở mọi lối vào
+Đã từng có lỗ hổng do cùng một hành động có 2 lối vào với quy tắc khác nhau (admin tự đổi email/mật khẩu ở Quản lý thành viên không cần mật khẩu, trong khi Tài khoản của tôi thì cần). Khi thêm/sửa bất kỳ chức năng nào:
+- **Liệt kê mọi lối vào của cùng một hành động** (grep các endpoint/service cùng ghi một cột: email, password, role, status, số tiền...) và áp **cùng một quy tắc** cho tất cả. Ưu tiên gọi chung một hàm service thay vì viết lại logic (vd `FeeSettingService.findEffective`).
+- **"Của mình" khác "của người khác"**: thao tác nhạy cảm trên chính tài khoản mình (email, mật khẩu) chỉ đi qua `/api/account/*` và **bắt buộc mật khẩu hiện tại**. Trang quản trị (`/api/members/*`) phải **chặn khi `id` = người đang đăng nhập** với mọi thao tác nhạy cảm — đổi email, đặt lại mật khẩu, đổi vai trò, khóa/ngừng hoạt động — và báo hướng sang Tài khoản của tôi.
+- **Backend là nơi chặn thật** (service ném `BusinessException`); giao diện ẩn/khóa nút chỉ để dễ dùng. Không bao giờ chỉ chặn ở frontend.
+- Cùng một dữ liệu thì **cùng kiểm tra và chuẩn hóa** ở mọi nơi nhận vào: dùng chung hằng/DTO trong `dto/common` (`Validation`, `DateFormats`), cùng trim/lowercase/rỗng → null, cùng tên trường lỗi và thông báo tiếng Việt.
+- Khi kiểm thử, luôn có ca **"tự làm với chính mình"** và ca **"vai trò khác gọi thẳng API"** cho mỗi hành động, và chạy trên **mọi lối vào** của hành động đó.
+
 ## Luồng một request
 `views/*.vue` → `frontend/src/api/*.js` (instance `http.js` gắn Bearer token) → Vite proxy `/api` → `SecurityConfig` (giải mã JWT, claim `roles` → `ROLE_*`) → `@RestController` → service (`@Transactional`, ném `BusinessException`/`ResourceNotFoundException`) → repository → MySQL. Lỗi đi ngược lại qua `GlobalExceptionHandler` → `ErrorResponse` → `http.js` chuẩn hóa thành `{ status, message, errors }` → view hiện `ElMessage` / lỗi dưới ô nhập.
 

@@ -24,7 +24,7 @@ paths:
   | `/api/courts/**` | mọi người đã đăng nhập | ADMIN |
   | `/api/fee-settings/**` | ADMIN, TREASURER | ADMIN |
   | `/api/account/**`, `/api/auth/me`, `/api/roles`, `/api/levels` | mọi người đã đăng nhập | chính chủ (`/api/account`) |
-- Admin không được tự hạ vai trò hay tự khóa/ngừng hoạt động tài khoản của chính mình (chặn ở `MemberService`).
+- Admin không được tự hạ vai trò, tự đổi email, tự đặt lại mật khẩu, hay tự khóa/ngừng hoạt động tài khoản của chính mình qua `/api/members` (chặn ở `MemberService`, giao diện ẩn nút và dẫn sang Tài khoản của tôi). Thao tác nhạy cảm trên chính tài khoản mình (đổi email, đổi mật khẩu) đi qua `/api/account/*` và bắt buộc xác nhận mật khẩu hiện tại.
 - Phía frontend: menu và route guard dựa trên `auth.user.role` lấy lúc tải trang; nếu vai trò bị đổi khi đang mở trang, giao diện chỉ cập nhật sau khi tải lại, nhưng backend đã chặn/cho phép đúng ngay.
 - Endpoint public chỉ có `POST /api/auth/login`; thêm endpoint public mới phải khai báo trong `SecurityConfig`.
 - CORS cho `app.cors.allowed-origins` (mặc định `http://localhost:5173`) trên `/api/**`.

@@ -1,5 +1,6 @@
 package com.badmintonclub.clubmanagement.controller;
 
+import com.badmintonclub.clubmanagement.dto.account.ChangeEmailRequest;
 import com.badmintonclub.clubmanagement.dto.account.ChangePasswordRequest;
 import com.badmintonclub.clubmanagement.dto.account.ProfileUpdateRequest;
 import com.badmintonclub.clubmanagement.dto.member.MemberResponse;
@@ -29,6 +30,12 @@ public class AccountController {
     public MemberResponse updateProfile(@AuthenticationPrincipal Jwt jwt,
                                         @Valid @RequestBody ProfileUpdateRequest request) {
         return accountService.updateProfile(CurrentUser.id(jwt), request);
+    }
+
+    @PatchMapping("/email")
+    public MemberResponse changeEmail(@AuthenticationPrincipal Jwt jwt,
+                                      @Valid @RequestBody ChangeEmailRequest request) {
+        return accountService.changeEmail(CurrentUser.id(jwt), request);
     }
 
     @PatchMapping("/password")

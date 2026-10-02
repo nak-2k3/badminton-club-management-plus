@@ -109,15 +109,20 @@ public class MemberService {
         User user = findMember(id);
         String email = normalizeEmail(request.email());
         String phone = normalizePhone(request.phone());
+        // Email của chính mình chỉ đổi ở "Tài khoản của tôi" (cần mật khẩu hiện tại), không đổi ở đây
+        if (id.equals(currentUserId) && !email.equals(user.getEmail())) {
+            throw new BusinessException("email",
+                    "Đổi email của bạn tại mục Tài khoản của tôi (cần xác nhận mật khẩu)");
+        }
+        // Tránh admin tự hạ quyền rồi không vào lại được trang quản trị
+        if (id.equals(currentUserId) && !user.getRole().getId().equals(request.roleId())) {
+            throw new BusinessException("roleId", "Bạn không thể tự thay đổi vai trò của chính mình");
+        }
         if (userRepository.existsByEmailAndIdNot(email, id)) {
             throw new BusinessException("email", "Email " + email + " đã được sử dụng");
         }
         if (phone != null && userRepository.existsByPhoneAndIdNot(phone, id)) {
             throw new BusinessException("phone", "Số điện thoại " + phone + " đã được sử dụng");
-        }
-        // Tránh admin tự hạ quyền rồi không vào lại được trang quản trị
-        if (id.equals(currentUserId) && !user.getRole().getId().equals(request.roleId())) {
-            throw new BusinessException("roleId", "Bạn không thể tự thay đổi vai trò của chính mình");
         }
 
         user.setFullName(request.fullName().trim());
@@ -144,8 +149,13 @@ public class MemberService {
         return MemberResponse.from(user);
     }
 
+    // Admin đặt lại mật khẩu cho NGƯỜI KHÁC (vd thành viên quên mật khẩu) — không cần mật khẩu cũ của họ.
+    // Mật khẩu của chính mình chỉ đổi ở "Tài khoản của tôi" (bắt buộc nhập mật khẩu hiện tại).
     @Transactional
-    public void resetPassword(Long id, String newPassword) {
+    public void resetPassword(Long id, String newPassword, Long currentUserId) {
+        if (id.equals(currentUserId)) {
+            throw new BusinessException("Đổi mật khẩu của bạn tại mục Tài khoản của tôi (cần nhập mật khẩu hiện tại)");
+        }
         User user = findMember(id);
         user.setPassword(passwordEncoder.encode(newPassword));
     }
