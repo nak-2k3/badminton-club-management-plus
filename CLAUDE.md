@@ -8,13 +8,14 @@ Hệ thống quản lý câu lạc bộ cầu lông (tiểu luận). Người d�
 - **Backend** (thư mục gốc): Spring Boot 4 REST API JSON, chạy ở `:8080`, mọi endpoint bắt đầu bằng `/api/`.
 - **Frontend** (`frontend/`): Vue 3 + Vite + Element Plus, chạy ở `:5173`.
 - **Database**: MySQL `badminton_club_plus`, schema chuẩn ở `database/schema.sql`.
+- **Cài lần đầu**: tạo database `badminton_club_plus` (utf8mb4), import `database/schema.sql` rồi `database/data.sql` (danh mục `roles`, `levels`, `fee_settings`, `courts`) — thiếu role `ADMIN` thì `DataInitializer` báo lỗi khi khởi động.
 
 ## Nguyên tắc giao diện: dễ sử dụng, thân thiện với điện thoại
 Giao diện hiện tại đã được người dùng duyệt — tính năng mới phải giữ cùng phong cách và mức độ hoàn thiện:
 - **Dễ sử dụng**: mọi chữ, nhãn, thông báo bằng tiếng Việt; thao tác quan trọng (khóa, xóa, đăng xuất...) luôn có hộp xác nhận; lỗi hiện ngay dưới ô nhập; có trạng thái đang tải và trạng thái rỗng; thao tác thường dùng chỉ cần 1–2 lần bấm.
 - **Mobile friendly** (kiểm tra ở ~500px và 1280px): không tràn ngang thân trang; bảng nhiều cột cuộn ngang bên trong khung, cột thao tác cố định bên phải; bộ lọc/nút tự xuống hàng; dialog không rộng quá màn hình; vùng bấm đủ lớn.
 - **Sáng/tối**: mọi màn hình mới phải đọc rõ ở cả 2 chế độ — chỉ dùng biến màu `--el-*`, không viết mã màu cứng.
-- **Nhất quán**: dùng component Element Plus và các mẫu sẵn có làm khuôn cho trang mới (danh sách lớn: `MemberListView`/`MemberDetailView`/`MemberFormDialog`; danh sách nhỏ: `CourtListView`; mức phí: `FeeSettingView` — xem `frontend.md`); giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
+- **Nhất quán**: dùng component Element Plus và các mẫu sẵn có làm khuôn cho trang mới (danh sách lớn: `MemberListView`/`MemberDetailView`/`MemberFormDialog`; danh sách nhỏ: `CourtListView`; mức phí: `FeeSettingView`; danh sách + trang chi tiết chia thành các khối con theo đối tượng: `ScheduleListView`/`ScheduleDetailView` với `components/schedules/Schedule{Participants,Guests}` — hợp với dữ liệu gắn theo buổi chơi như khoản chi; xem `frontend.md`); giữ hiệu ứng chuyển trang nhẹ và tôn trọng `prefers-reduced-motion`.
 - Chi tiết kỹ thuật xem `.claude/rules/frontend.md`.
 
 ## Tính nhất quán & an toàn: một hành động — một quy tắc ở mọi lối vào
@@ -31,6 +32,8 @@ Giao diện hiện tại đã được người dùng duyệt — tính năng m�
 ## Tiến độ hiện tại
 - Đã có entity cho đủ 12 bảng, đã làm xong trọn bộ (service + controller + giao diện) cho: đăng nhập, **thành viên**, **sân**, **mức phí**, **tài khoản của tôi**, **lịch chơi**, **đăng ký tham gia & điểm danh** (thành viên), **khách vãng lai** (dẫn khách, thu phí khách, điểm danh khách, trang Phí khách).
 - Chưa làm: khoản thu (`payments`), khoản chi (`expenses`), báo cáo. Khi làm, nhớ thêm quy tắc URL vào `SecurityConfig` và cập nhật ma trận quyền trong `security-auth.md`.
+  - `requestMatchers` khớp theo thứ tự từ trên xuống: quy tắc cụ thể phải đặt **trước** quy tắc chung (vd `PATCH /api/schedules/*/guests/*/payment` cho TREASURER nằm trước `/api/schedules/**` chỉ ADMIN) — đặt sai sẽ âm thầm chặn TREASURER.
+- Làm xong một chức năng: cập nhật mục này, ma trận quyền trong `security-auth.md` và quy tắc nghiệp vụ mới trong `business-rules.md` để phiên sau không làm lại hoặc bỏ sót.
 - Đăng nhập thử ở môi trường phát triển: `admin@badmintonclub.local` / `Admin@123` (tạo tự động khi bảng `users` trống).
 
 ## Quy tắc chi tiết: `.claude/rules/`
