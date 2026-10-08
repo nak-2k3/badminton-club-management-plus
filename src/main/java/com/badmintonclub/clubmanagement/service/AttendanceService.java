@@ -1,7 +1,9 @@
 package com.badmintonclub.clubmanagement.service;
 
+import com.badmintonclub.clubmanagement.dto.guest.GuestRegistrationResponse;
 import com.badmintonclub.clubmanagement.dto.registration.ParticipantResponse;
 import com.badmintonclub.clubmanagement.entity.Attendance;
+import com.badmintonclub.clubmanagement.entity.GuestRegistration;
 import com.badmintonclub.clubmanagement.entity.Registration;
 import com.badmintonclub.clubmanagement.entity.Schedule;
 import com.badmintonclub.clubmanagement.entity.User;
@@ -9,7 +11,9 @@ import com.badmintonclub.clubmanagement.enums.AttendanceStatus;
 import com.badmintonclub.clubmanagement.enums.RegistrationStatus;
 import com.badmintonclub.clubmanagement.enums.ScheduleStatus;
 import com.badmintonclub.clubmanagement.exception.BusinessException;
+import com.badmintonclub.clubmanagement.exception.ResourceNotFoundException;
 import com.badmintonclub.clubmanagement.repository.AttendanceRepository;
+import com.badmintonclub.clubmanagement.repository.GuestRegistrationRepository;
 import com.badmintonclub.clubmanagement.repository.RegistrationRepository;
 import com.badmintonclub.clubmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +38,7 @@ public class AttendanceService {
     private final RegistrationService registrationService;
     private final RegistrationRepository registrationRepository;
     private final AttendanceRepository attendanceRepository;
+    private final GuestRegistrationRepository guestRegistrationRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -53,7 +58,18 @@ public class AttendanceService {
         return ParticipantResponse.from(registration, attendanceRepository.save(attendance));
     }
 
-    // Đánh dấu nhanh tất cả người CHƯA điểm danh (người đã điểm danh giữ nguyên)
+    // Điểm danh khách: cùng điều kiện với thành viên (ensureCanMark); bảng khách không lưu người/giờ điểm danh
+    @Transactional
+    public GuestRegistrationResponse markGuest(Long scheduleId, Long guestRegistrationId, AttendanceStatus status) {
+        Schedule schedule = scheduleService.findSchedule(scheduleId);
+        ensureCanMark(schedule);
+        GuestRegistration gr = guestRegistrationRepository.findByIdAndSchedule_Id(guestRegistrationId, scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách trong buổi chơi này"));
+        gr.setAttendanceStatus(status);
+        return GuestRegistrationResponse.from(gr, true);
+    }
+
+    // Đánh dấu nhanh tất cả người CHƯA điểm danh, gồm cả khách (người đã điểm danh giữ nguyên)
     @Transactional
     public List<ParticipantResponse> markAll(Long scheduleId, AttendanceStatus status, Long currentUserId) {
         if (status == AttendanceStatus.NOT_MARKED) {
@@ -72,6 +88,9 @@ public class AttendanceService {
                     apply(attendance, status, attendance.getNote(), currentUserId);
                     attendanceRepository.save(attendance);
                 });
+        guestRegistrationRepository.findBySchedule_IdOrderByRegisteredAtAscIdAsc(scheduleId).stream()
+                .filter(gr -> gr.getAttendanceStatus() == AttendanceStatus.NOT_MARKED)
+                .forEach(gr -> gr.setAttendanceStatus(status));
         return registrationService.participants(scheduleId);
     }
 

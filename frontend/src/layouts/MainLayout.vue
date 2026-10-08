@@ -13,6 +13,7 @@ import {
   Expand,
   Location,
   Money,
+  Wallet,
   Setting
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
@@ -32,6 +33,7 @@ const menuItems = [
   { path: '/members', title: 'Thành viên', icon: UserFilled, roles: ['ADMIN'] },
   { path: '/courts', title: 'Sân', icon: Location, roles: ['ADMIN'] },
   { path: '/fees', title: 'Mức phí', icon: Money, roles: ['ADMIN', 'TREASURER'] },
+  { path: '/guest-fees', title: 'Phí khách', icon: Wallet, roles: ['ADMIN', 'TREASURER'] },
   { path: '/account', title: 'Tài khoản của tôi', icon: Setting }
 ]
 

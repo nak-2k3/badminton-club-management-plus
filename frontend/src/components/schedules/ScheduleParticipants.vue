@@ -16,10 +16,12 @@ import {
 
 // Thẻ "Người tham gia" trong trang chi tiết buổi chơi: danh sách đăng ký + điểm danh
 const props = defineProps({
-  schedule: { type: Object, required: true }
+  schedule: { type: Object, required: true },
+  // Số khách chưa điểm danh (thẻ khách báo lên): "Tất cả có mặt" điểm danh cả khách
+  extraNotMarked: { type: Number, default: 0 }
 })
-// changed: thêm/bớt người làm đổi số chỗ -> trang cha cập nhật buổi chơi
-const emit = defineEmits(['changed'])
+// changed: thêm/bớt người làm đổi số chỗ -> trang cha cập nhật buổi chơi; marked-all: để thẻ khách tải lại
+const emit = defineEmits(['changed', 'marked-all'])
 
 const auth = useAuthStore()
 // Điện thoại: hiện dạng thẻ (nút điểm danh to, không phải cuộn ngang bảng)
@@ -56,6 +58,7 @@ const summary = computed(() => {
   participants.value.forEach((p) => count[p.attendanceStatus]++)
   return count
 })
+const notMarkedTotal = computed(() => summary.value.NOT_MARKED + props.extraNotMarked)
 const showAttendance = computed(() => canMark.value || summary.value.PRESENT + summary.value.ABSENT > 0)
 const isSelf = (p) => p.userId === auth.user?.id
 
@@ -91,7 +94,7 @@ async function mark(participant, status) {
 async function markAllPresent() {
   try {
     await ElMessageBox.confirm(
-      `Đánh dấu ${summary.value.NOT_MARKED} người chưa điểm danh là "Có mặt"? Người đã điểm danh giữ nguyên.`,
+      `Đánh dấu ${notMarkedTotal.value} người chưa điểm danh (gồm cả khách) là "Có mặt"? Người đã điểm danh giữ nguyên.`,
       'Điểm danh nhanh',
       { confirmButtonText: 'Xác nhận', cancelButtonText: 'Hủy', type: 'info' }
     )
@@ -101,6 +104,7 @@ async function markAllPresent() {
   markingAll.value = true
   try {
     participants.value = await scheduleApi.markAllAttendance(props.schedule.id, 'PRESENT')
+    emit('marked-all')
     ElMessage.success('Đã điểm danh')
   } catch (err) {
     ElMessage.error(err.message)
@@ -150,12 +154,12 @@ watch(
         <span>
           Người tham gia
           <span class="text-secondary">
-            ({{ participants.length }} thành viên<template v-if="guestCount"> + {{ guestCount }} khách</template>)
+            ({{ participants.length }} thành viên<template v-if="guestCount"> + {{ guestCount }} khách bên dưới</template>)
           </span>
         </span>
         <div class="header-actions">
           <el-button
-            v-if="canMark && summary.NOT_MARKED > 0"
+            v-if="canMark && notMarkedTotal > 0"
             :icon="Select"
             size="small"
             :loading="markingAll"

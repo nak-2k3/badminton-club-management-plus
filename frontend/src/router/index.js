@@ -56,6 +56,12 @@ const routes = [
         meta: { title: 'Mức phí', roles: ['ADMIN', 'TREASURER'] }
       },
       {
+        path: 'guest-fees',
+        name: 'guest-fees',
+        component: () => import('@/views/guests/GuestFeeListView.vue'),
+        meta: { title: 'Phí khách', roles: ['ADMIN', 'TREASURER'] }
+      },
+      {
         path: 'account',
         name: 'account',
         component: () => import('@/views/account/AccountView.vue'),

@@ -65,6 +65,16 @@ export const ATTENDANCE_STATUS_TAG_TYPES = {
   ABSENT: 'danger'
 }
 
+export const PAYMENT_STATUS_LABELS = {
+  UNPAID: 'Chưa thu',
+  PAID: 'Đã thu'
+}
+
+export const PAYMENT_STATUS_TAG_TYPES = {
+  UNPAID: 'warning',
+  PAID: 'success'
+}
+
 // Chuyển object nhãn thành danh sách cho el-select
 export const toOptions = (labels) =>
   Object.entries(labels).map(([value, label]) => ({ value, label }))

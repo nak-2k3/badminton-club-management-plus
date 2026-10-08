@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { ArrowLeft, Edit, Lock, Unlock, CircleCheck, CircleClose, Delete, Check } from '@element-plus/icons-vue'
 import { scheduleApi } from '@/api/schedules'
 import { useAuthStore } from '@/stores/auth'
@@ -15,6 +16,7 @@ import {
 } from '@/composables/useScheduleActions'
 import ScheduleFormDialog from '@/components/schedules/ScheduleFormDialog.vue'
 import ScheduleParticipants from '@/components/schedules/ScheduleParticipants.vue'
+import ScheduleGuests from '@/components/schedules/ScheduleGuests.vue'
 import { SCHEDULE_STATUS_LABELS, SCHEDULE_STATUS_TAG_TYPES, SCHEDULE_TYPE_LABELS } from '@/utils/labels'
 import { formatCurrency, formatDuration, minutesBetween, weekdayOf } from '@/utils/format'
 
@@ -51,6 +53,19 @@ async function fetchSchedule() {
     loading.value = false
   }
 }
+
+// Tải lại buổi chơi không hiện vòng xoay toàn trang (sau khi thêm/hủy khách đổi số chỗ)
+async function refreshSchedule() {
+  try {
+    schedule.value = await scheduleApi.getById(route.params.id)
+  } catch (err) {
+    ElMessage.error(err.message)
+  }
+}
+
+// Phối hợp 2 thẻ: "Tất cả có mặt" ở thẻ người tham gia cũng điểm danh khách -> tải lại thẻ khách
+const guestNotMarked = ref(0)
+const guestsReloadKey = ref(0)
 
 async function handleStatus(status) {
   const updated = await changeStatus(schedule.value, status)
@@ -216,7 +231,18 @@ onMounted(fetchSchedule)
         </el-descriptions>
       </el-card>
 
-      <ScheduleParticipants :schedule="schedule" @changed="(updated) => (schedule = updated)" />
+      <ScheduleParticipants
+        :schedule="schedule"
+        :extra-not-marked="guestNotMarked"
+        @changed="(updated) => (schedule = updated)"
+        @marked-all="guestsReloadKey++"
+      />
+      <ScheduleGuests
+        :schedule="schedule"
+        :reload-key="guestsReloadKey"
+        @changed="refreshSchedule"
+        @summary="(s) => (guestNotMarked = s.notMarked)"
+      />
     </template>
 
     <ScheduleFormDialog v-model="formVisible" :schedule="schedule" @saved="(saved) => (schedule = saved)" />

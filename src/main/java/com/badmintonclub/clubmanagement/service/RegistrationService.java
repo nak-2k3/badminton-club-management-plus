@@ -13,6 +13,7 @@ import com.badmintonclub.clubmanagement.enums.UserStatus;
 import com.badmintonclub.clubmanagement.exception.BusinessException;
 import com.badmintonclub.clubmanagement.exception.ResourceNotFoundException;
 import com.badmintonclub.clubmanagement.repository.AttendanceRepository;
+import com.badmintonclub.clubmanagement.repository.GuestRegistrationRepository;
 import com.badmintonclub.clubmanagement.repository.RegistrationRepository;
 import com.badmintonclub.clubmanagement.repository.ScheduleRepository;
 import com.badmintonclub.clubmanagement.repository.UserRepository;
@@ -42,6 +43,7 @@ public class RegistrationService {
     private final ScheduleRepository scheduleRepository;
     private final RegistrationRepository registrationRepository;
     private final AttendanceRepository attendanceRepository;
+    private final GuestRegistrationRepository guestRegistrationRepository;
     private final UserRepository userRepository;
 
     public static LocalDateTime selfCancelDeadline(Schedule schedule) {
@@ -102,27 +104,14 @@ public class RegistrationService {
                     + "\" đang bị khóa hoặc ngừng hoạt động, không thể đăng ký");
         }
 
-        switch (schedule.getStatus()) {
-            case CLOSED -> throw new BusinessException("Buổi chơi đã đóng đăng ký");
-            case CANCELLED -> throw new BusinessException("Buổi chơi đã bị hủy");
-            case COMPLETED -> throw new BusinessException("Buổi chơi đã kết thúc");
-            case OPEN -> {
-            }
-        }
-        if (ScheduleService.isStarted(schedule)) {
-            throw new BusinessException("Buổi chơi đã bắt đầu, không thể đăng ký nữa");
-        }
+        ensureJoinable(schedule);
 
         Optional<Registration> existing = registrationRepository.findBySchedule_IdAndUser_Id(scheduleId, userId);
         if (existing.isPresent() && existing.get().getStatus() == RegistrationStatus.REGISTERED) {
             throw new BusinessException(self ? "Bạn đã đăng ký buổi này rồi"
                     : "\"" + user.getFullName() + "\" đã đăng ký buổi này rồi");
         }
-        // Số chỗ đã dùng tính cả thành viên lẫn khách
-        long registered = scheduleService.countRegistered(scheduleId);
-        if (registered >= schedule.getMaxPlayers()) {
-            throw new BusinessException("Buổi chơi đã đủ người (" + registered + "/" + schedule.getMaxPlayers() + ")");
-        }
+        ensureHasSlot(schedule);
 
         // Hủy rồi đăng ký lại: dùng lại dòng cũ (unique user + buổi)
         Registration registration = existing.orElseGet(() -> {
@@ -134,6 +123,35 @@ public class RegistrationService {
         registration.setStatus(RegistrationStatus.REGISTERED);
         registration.setRegisteredAt(LocalDateTime.now());
         registrationRepository.save(registration);
+    }
+
+    // Buổi còn nhận người mới: dùng chung cho thành viên đăng ký và dẫn khách (GuestService)
+    static void ensureJoinable(Schedule schedule) {
+        switch (schedule.getStatus()) {
+            case CLOSED -> throw new BusinessException("Buổi chơi đã đóng đăng ký");
+            case CANCELLED -> throw new BusinessException("Buổi chơi đã bị hủy");
+            case COMPLETED -> throw new BusinessException("Buổi chơi đã kết thúc");
+            case OPEN -> {
+            }
+        }
+        if (ScheduleService.isStarted(schedule)) {
+            throw new BusinessException("Buổi chơi đã bắt đầu, không thể đăng ký nữa");
+        }
+    }
+
+    // Còn chỗ: số chỗ đã dùng tính cả thành viên lẫn khách. Gọi sau khi đã khóa dòng buổi chơi (findByIdForUpdate)
+    void ensureHasSlot(Schedule schedule) {
+        long registered = scheduleService.countRegistered(schedule.getId());
+        if (registered >= schedule.getMaxPlayers()) {
+            throw new BusinessException("Buổi chơi đã đủ người (" + registered + "/" + schedule.getMaxPlayers() + ")");
+        }
+    }
+
+    // Đang đăng ký buổi (REGISTERED) — điều kiện để dẫn khách
+    boolean isRegistered(Long scheduleId, Long userId) {
+        return registrationRepository.findBySchedule_IdAndUser_Id(scheduleId, userId)
+                .map(r -> r.getStatus() == RegistrationStatus.REGISTERED)
+                .orElse(false);
     }
 
     private void cancel(Long scheduleId, Long userId, boolean self) {
@@ -152,6 +170,13 @@ public class RegistrationService {
         if (self && !LocalDateTime.now().isBefore(deadline)) {
             throw new BusinessException("Đã quá hạn tự hủy (trước " + deadline.format(DEADLINE_FORMAT) + ", tức "
                     + SELF_CANCEL_DEADLINE_HOURS + " tiếng trước giờ chơi). Vui lòng liên hệ quản trị viên.");
+        }
+
+        // Người dẫn khách phải đang đăng ký buổi: còn khách do người này dẫn thì phải hủy khách trước
+        long guests = guestRegistrationRepository.countBySchedule_IdAndInvitedBy_Id(scheduleId, userId);
+        if (guests > 0) {
+            throw new BusinessException((self ? "Bạn đang" : "Thành viên này đang") + " dẫn " + guests
+                    + " khách trong buổi này. Hãy hủy khách trước rồi mới hủy đăng ký.");
         }
 
         // Đã điểm danh thì giữ nguyên để không mất kết quả; bỏ điểm danh trước rồi mới hủy được
