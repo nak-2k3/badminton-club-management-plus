@@ -88,6 +88,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/schedules/*/guests/*").authenticated()
                         .requestMatchers("/api/guest-fees/**").hasAnyRole("ADMIN", "TREASURER")
                         .requestMatchers("/api/schedules/**").hasRole("ADMIN")
+                        // Khoản thu (gồm đợt thu /batches, thao tác hàng loạt): xem khoản của chính mình mọi vai trò (đặt trước quy tắc chung bên dưới)
+                        .requestMatchers(HttpMethod.GET, "/api/payments/me").authenticated()
+                        .requestMatchers("/api/payments/**").hasAnyRole("ADMIN", "TREASURER")
                         // /api/account/**, /api/roles, /api/levels: mọi người đã đăng nhập (anyRequest bên dưới)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

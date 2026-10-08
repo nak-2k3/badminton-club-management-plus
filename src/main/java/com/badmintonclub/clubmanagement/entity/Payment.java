@@ -26,6 +26,11 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
+    // Đợt thu chứa khoản này (nội dung khoản thu nằm ở đợt)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "batch_id", nullable = false)
+    private PaymentBatch batch;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -34,9 +39,7 @@ public class Payment {
     @Column(name = "payment_type", nullable = false)
     private PaymentType paymentType;
 
-    @Column(name = "description", nullable = false)
-    private String description;
-
+    // Chép từ đợt thu; giữ ở đây để unique uk_payment_user_month chặn thu trùng tháng.
     // MONTHLY bắt buộc có month (1-12) và year
     @Column(name = "month", columnDefinition = "TINYINT")
     private Integer month;

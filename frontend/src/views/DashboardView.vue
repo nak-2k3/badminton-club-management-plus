@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { UserFilled, CircleCheck, Lock, CircleClose, ArrowRight } from '@element-plus/icons-vue'
 import { memberApi } from '@/api/members'
 import { scheduleApi } from '@/api/schedules'
+import MyPaymentsCard from '@/components/payments/MyPaymentsCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   ROLE_LABELS,
@@ -143,6 +144,8 @@ onMounted(() => {
         </el-button>
       </template>
     </el-card>
+
+    <MyPaymentsCard />
 
     <template v-if="isAdmin">
       <div class="section-title">

@@ -56,7 +56,7 @@ CREATE TABLE `courts` (
   `active` tinyint(1) DEFAULT '1',
   `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`court_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -100,7 +100,7 @@ CREATE TABLE `fee_settings` (
   `active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`fee_setting_id`),
   CONSTRAINT `chk_fee_gender` CHECK ((((`fee_type` = _utf8mb4'MONTHLY') and (`gender` is not null)) or ((`fee_type` = _utf8mb4'GUEST') and (`gender` is null))))
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -164,7 +164,33 @@ CREATE TABLE `levels` (
   `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`level_id`),
   UNIQUE KEY `level_name` (`level_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `payment_batches`
+--
+
+DROP TABLE IF EXISTS `payment_batches`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payment_batches` (
+  `batch_id` bigint NOT NULL AUTO_INCREMENT,
+  `payment_type` enum('MONTHLY','EXTRA') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `month` tinyint DEFAULT NULL,
+  `year` smallint DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL COMMENT 'Thu thêm: số tiền mỗi người; phí tháng: NULL (theo giới tính)',
+  `note` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` bigint NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`batch_id`),
+  UNIQUE KEY `uk_batch_period` (`payment_type`,`year`,`month`),
+  KEY `fk_batches_creator` (`created_by`),
+  CONSTRAINT `fk_batches_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `chk_batch_month` CHECK (((`month` is null) or (`month` between 1 and 12))),
+  CONSTRAINT `chk_batch_type` CHECK ((((`payment_type` = _utf8mb4'MONTHLY') and (`month` is not null) and (`year` is not null)) or ((`payment_type` = _utf8mb4'EXTRA') and (`month` is null) and (`year` is null) and (`amount` is not null))))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,9 +202,9 @@ DROP TABLE IF EXISTS `payments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `payments` (
   `payment_id` bigint NOT NULL AUTO_INCREMENT,
+  `batch_id` bigint NOT NULL,
   `user_id` bigint NOT NULL,
   `payment_type` enum('MONTHLY','EXTRA') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `month` tinyint DEFAULT NULL,
   `year` smallint DEFAULT NULL,
   `amount` decimal(12,2) NOT NULL,
@@ -191,6 +217,8 @@ CREATE TABLE `payments` (
   PRIMARY KEY (`payment_id`),
   UNIQUE KEY `uk_payment_user_month` (`user_id`,`payment_type`,`year`,`month`),
   KEY `fk_payments_creator` (`created_by`),
+  KEY `fk_payments_batch` (`batch_id`),
+  CONSTRAINT `fk_payments_batch` FOREIGN KEY (`batch_id`) REFERENCES `payment_batches` (`batch_id`),
   CONSTRAINT `fk_payments_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
   CONSTRAINT `fk_payments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `chk_payment_month` CHECK (((`month` is null) or (`month` between 1 and 12))),
@@ -232,7 +260,7 @@ CREATE TABLE `roles` (
   `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`role_id`),
   UNIQUE KEY `role_name` (`role_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -311,4 +339,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-01 18:19:02
+-- Dump completed on 2026-10-08 20:55:16

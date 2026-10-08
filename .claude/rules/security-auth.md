@@ -28,6 +28,8 @@ paths:
   | `/api/schedules/*/guests` (POST), `/api/schedules/*/guests/*` (PUT, DELETE) | mọi người đã đăng nhập (`GET .../guests`) | mọi người đã đăng nhập — `GuestService` kiểm tra người dẫn / quyền |
   | `/api/schedules/*/guests/*/payment` (PATCH), `/api/guest-fees/**` | ADMIN, TREASURER | ADMIN, TREASURER |
   | `/api/schedules/*/guests/*/attendance` (PUT) | — | ADMIN |
+  | `/api/payments/me` (GET) | mọi người đã đăng nhập (khoản của chính mình) | — |
+  | `/api/payments/**` (gồm `/batches/**` đợt thu, `/monthly`, `/member-options`, `/{id}/status`, `/bulk-delete`, `/bulk-collect`) | ADMIN, TREASURER | ADMIN, TREASURER |
   | `/api/account/**`, `/api/auth/me`, `/api/roles`, `/api/levels` | mọi người đã đăng nhập | chính chủ (`/api/account`) |
 - Admin không được tự hạ vai trò, tự đổi email, tự đặt lại mật khẩu, hay tự khóa/ngừng hoạt động tài khoản của chính mình qua `/api/members` (chặn ở `MemberService`, giao diện ẩn nút và dẫn sang Tài khoản của tôi). Thao tác nhạy cảm trên chính tài khoản mình (đổi email, đổi mật khẩu) đi qua `/api/account/*` và bắt buộc xác nhận mật khẩu hiện tại.
 - Service cần biết vai trò người đang đăng nhập (vd ADMIN/TREASURER được thêm hộ khách): controller nhận thêm tham số `Authentication` và gọi `CurrentUser.isManager(auth)` / `CurrentUser.hasAnyRole(auth, ...)`, truyền boolean xuống service; vi phạm quyền ở tầng service ném `AccessDeniedException` (→ 403).
