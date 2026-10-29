@@ -147,6 +147,16 @@ onMounted(fetchSchedule)
         </div>
       </el-card>
 
+      <el-alert
+        v-if="schedule.status === 'CANCELLED'"
+        type="error"
+        show-icon
+        :closable="false"
+        title="Buổi chơi đã bị hủy"
+        :description="schedule.cancelReason ? `Lý do: ${schedule.cancelReason}` : 'Người hủy không ghi lý do.'"
+        class="cancel-alert"
+      />
+
       <!-- Đăng ký của chính mình: mọi vai trò -->
       <el-card shadow="never" class="my-registration" :class="{ joined: schedule.registeredByMe }">
         <div class="my-registration-body">
@@ -250,6 +260,11 @@ onMounted(fetchSchedule)
 </template>
 
 <style scoped>
+.cancel-alert :deep(.el-alert__description) {
+  font-size: 14px;
+  word-break: break-word;
+}
+
 .detail-page {
   display: flex;
   flex-direction: column;

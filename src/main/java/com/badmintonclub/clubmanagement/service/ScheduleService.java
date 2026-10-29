@@ -198,7 +198,8 @@ public class ScheduleService {
             }
             case CANCELLED -> {
                 if (StringUtils.hasText(reason)) {
-                    schedule.setNote(appendNote(schedule.getNote(), "Lý do hủy: " + reason.trim()));
+                    schedule.setNote(appendNote(schedule.getNote(),
+                            ScheduleResponse.CANCEL_REASON_PREFIX + reason.trim()));
                 }
             }
             case CLOSED -> {

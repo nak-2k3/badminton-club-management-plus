@@ -34,7 +34,7 @@
 - **Lịch chơi** (`ScheduleService`, tạo từng buổi một, không có lặp tự động):
   - Chỉ chọn sân đang hoạt động; không tạo buổi có giờ bắt đầu đã qua; không trùng khung giờ với buổi khác (chưa hủy) cùng địa điểm cùng ngày.
   - "Đã đăng ký" = `registrations` REGISTERED + `guest_registrations`. Buổi đã có người đăng ký: không đổi địa điểm/ngày/giờ (muốn đổi thì hủy và tạo buổi mới), `max_players` không nhỏ hơn số đã đăng ký.
-  - Trạng thái: `OPEN ⇄ CLOSED` (không mở lại khi đã qua giờ bắt đầu); `OPEN/CLOSED → CANCELLED` (lý do ghi thêm vào `note`) hoặc `→ COMPLETED` (khi ngày chơi ≤ hôm nay). `CANCELLED`/`COMPLETED` là trạng thái cuối, không sửa được nữa.
+  - Trạng thái: `OPEN ⇄ CLOSED` (không mở lại khi đã qua giờ bắt đầu); `OPEN/CLOSED → CANCELLED` (lý do ghi thêm vào `note` dạng `Lý do hủy: ...` — tiền tố `ScheduleResponse.CANCEL_REASON_PREFIX`; response tách sẵn thành `cancelReason` để giao diện hiện ở danh sách, trang chi tiết, Trang chủ) hoặc `→ COMPLETED` (khi ngày chơi ≤ hôm nay). `CANCELLED`/`COMPLETED` là trạng thái cuối, không sửa được nữa.
   - Không có tác vụ tự đóng: đăng ký chỉ hợp lệ khi buổi `OPEN`, **chưa tới giờ bắt đầu** và còn chỗ (response có cờ `started`).
   - Chỉ xóa cứng buổi chưa có ai tham gia: không còn đăng ký `REGISTERED`, không có khách/điểm danh/khoản chi. Đăng ký đã hủy bị xóa cùng buổi (không cần giữ). Còn lại thì hủy buổi.
   - Tiền sân tính bằng `ScheduleService.calculateCourtRent(...)` — dùng lại hàm này khi ghi khoản chi `COURT_RENT`.

@@ -40,8 +40,13 @@ public record ScheduleResponse(
         Long createdById,
         String createdByName,
         @JsonFormat(pattern = DateFormats.DATE_TIME) LocalDateTime createdAt,
-        String note
+        String note,
+        // Lý do hủy (tách từ note) — chỉ có khi buổi đã hủy và người hủy có nhập lý do
+        String cancelReason
 ) {
+    // Lý do hủy được ghi thêm vào note dạng "... | Lý do hủy: <lý do>" (ScheduleService.changeStatus)
+    public static final String CANCEL_REASON_PREFIX = "Lý do hủy: ";
+
     // Cần nạp sẵn court, createdBy (@EntityGraph) trước khi gọi
     public static ScheduleResponse from(Schedule schedule, long registeredCount, boolean started,
                                         boolean registeredByMe, LocalDateTime selfCancelDeadline,
@@ -70,6 +75,16 @@ public record ScheduleResponse(
                 schedule.getCreatedBy().getId(),
                 schedule.getCreatedBy().getFullName(),
                 schedule.getCreatedAt(),
-                schedule.getNote());
+                schedule.getNote(),
+                cancelReason(schedule));
+    }
+
+    private static String cancelReason(Schedule schedule) {
+        String note = schedule.getNote();
+        if (schedule.getStatus() != ScheduleStatus.CANCELLED || note == null) return null;
+        int index = note.lastIndexOf(CANCEL_REASON_PREFIX);
+        if (index < 0) return null;
+        String reason = note.substring(index + CANCEL_REASON_PREFIX.length()).trim();
+        return reason.isEmpty() ? null : reason;
     }
 }

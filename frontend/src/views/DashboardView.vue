@@ -128,6 +128,7 @@ onMounted(() => {
           <span class="upcoming-body">
             <span class="upcoming-title">{{ item.title }}</span>
             <span class="text-secondary">{{ item.startTime }} – {{ item.endTime }} · {{ item.courtName }}</span>
+            <span v-if="item.cancelReason" class="cancel-reason">Lý do hủy: {{ item.cancelReason }}</span>
           </span>
           <el-tag :type="SCHEDULE_STATUS_TAG_TYPES[item.status]" size="small" round disable-transitions>
             {{ SCHEDULE_STATUS_LABELS[item.status] }}
@@ -187,6 +188,12 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.cancel-reason {
+  color: var(--el-color-danger);
+  font-size: 12px;
+  word-break: break-word;
+}
+
 .dashboard {
   display: flex;
   flex-direction: column;

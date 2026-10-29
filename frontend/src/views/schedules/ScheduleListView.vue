@@ -262,6 +262,7 @@ onMounted(() => {
                   Đã đăng ký
                 </el-tag>
               </div>
+              <div v-if="row.cancelReason" class="cancel-reason">Lý do hủy: {{ row.cancelReason }}</div>
             </template>
           </el-table-column>
           <el-table-column label="Địa điểm" min-width="160">
@@ -374,6 +375,13 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.cancel-reason {
+  color: var(--el-color-danger);
+  font-size: 12px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
