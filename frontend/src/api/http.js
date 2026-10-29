@@ -21,9 +21,17 @@ http.interceptors.request.use((config) => {
 // Chuẩn hóa lỗi theo ErrorResponse của backend: { status, message, errors }
 http.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
     const status = error.response?.status
-    const data = error.response?.data ?? {}
+    let data = error.response?.data ?? {}
+    // Tải file (responseType: 'blob'): lỗi cũng về dạng Blob -> đọc lại thành JSON ErrorResponse
+    if (data instanceof Blob) {
+      try {
+        data = JSON.parse(await data.text())
+      } catch {
+        data = {}
+      }
+    }
     const apiError = {
       status: status ?? 0,
       message: data.message || (status ? 'Đã có lỗi xảy ra' : 'Không kết nối được máy chủ'),

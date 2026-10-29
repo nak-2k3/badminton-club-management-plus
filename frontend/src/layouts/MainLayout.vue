@@ -15,6 +15,8 @@ import {
   Money,
   Wallet,
   Coin,
+  Tickets,
+  DataAnalysis,
   Setting
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
@@ -36,6 +38,8 @@ const menuItems = [
   { path: '/fees', title: 'Mức phí', icon: Money, roles: ['ADMIN', 'TREASURER'] },
   { path: '/payments', title: 'Khoản thu', icon: Coin, roles: ['ADMIN', 'TREASURER'] },
   { path: '/guest-fees', title: 'Phí khách', icon: Wallet, roles: ['ADMIN', 'TREASURER'] },
+  { path: '/expenses', title: 'Khoản chi', icon: Tickets, roles: ['ADMIN', 'TREASURER'] },
+  { path: '/reports', title: 'Báo cáo', icon: DataAnalysis, roles: ['ADMIN', 'TREASURER'] },
   { path: '/account', title: 'Tài khoản của tôi', icon: Setting }
 ]
 

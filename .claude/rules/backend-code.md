@@ -8,7 +8,7 @@ paths:
 
 ## Công nghệ
 - Spring Boot **4.1.1** (không phải 3.x), Java 17, Maven (dùng `mvnw` / `mvnw.cmd`).
-- Spring Web MVC, Spring Data JPA, Spring Security + JWT (`spring-boot-starter-security-oauth2-resource-server`), Validation, Lombok.
+- Spring Web MVC, Spring Data JPA, Spring Security + JWT (`spring-boot-starter-security-oauth2-resource-server`), Validation, Lombok, Apache POI (`poi-ooxml`, xuất Excel báo cáo).
 - Jackson 3 (package `tools.jackson`, không phải `com.fasterxml.jackson` — trừ annotation).
 - Package gốc: `com.badmintonclub.clubmanagement`.
 
@@ -33,4 +33,4 @@ paths:
 - Lỗi trả JSON thống nhất `ErrorResponse { status, message, errors, timestamp }` qua `GlobalExceptionHandler`; `errors` là map lỗi theo trường khi `@Valid` thất bại.
 - Ném `BusinessException` (400) cho vi phạm nghiệp vụ, `ResourceNotFoundException` (404) khi không tìm thấy. Thông báo lỗi viết bằng tiếng Việt.
 - Lỗi nghiệp vụ gắn với một ô nhập (email/SĐT trùng, vai trò không tồn tại...) dùng `new BusinessException("tenTruong", "thông báo")` → `errors` có `{ tenTruong: thông báo }` để frontend hiện dưới đúng ô; tên trường trùng tên field trong request DTO.
-- `GlobalExceptionHandler` đã xử lý sẵn: JSON sai định dạng/ngày sai/enum lạ (400, gắn lỗi vào đúng trường), tham số URL sai kiểu (400), URL không tồn tại (404), sai phương thức (405), vi phạm ràng buộc DB (409). 401/403 ở tầng filter do `SecurityConfig` ghi cùng định dạng `ErrorResponse`.
+- `GlobalExceptionHandler` đã xử lý sẵn: JSON sai định dạng/ngày sai/enum lạ (400, gắn lỗi vào đúng trường), tham số URL sai kiểu / thiếu tham số bắt buộc (400), URL không tồn tại (404), sai phương thức (405), vi phạm ràng buộc DB (409). 401/403 ở tầng filter do `SecurityConfig` ghi cùng định dạng `ErrorResponse`.

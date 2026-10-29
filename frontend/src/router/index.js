@@ -68,6 +68,18 @@ const routes = [
         meta: { title: 'Chi tiết đợt thu', roles: ['ADMIN', 'TREASURER'], menu: '/payments' }
       },
       {
+        path: 'expenses',
+        name: 'expenses',
+        component: () => import('@/views/expenses/ExpenseListView.vue'),
+        meta: { title: 'Khoản chi', roles: ['ADMIN', 'TREASURER'] }
+      },
+      {
+        path: 'reports',
+        name: 'reports',
+        component: () => import('@/views/reports/ReportView.vue'),
+        meta: { title: 'Báo cáo thu chi', roles: ['ADMIN', 'TREASURER'] }
+      },
+      {
         path: 'guest-fees',
         name: 'guest-fees',
         component: () => import('@/views/guests/GuestFeeListView.vue'),

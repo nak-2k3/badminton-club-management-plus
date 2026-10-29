@@ -15,6 +15,10 @@
 
   --app-header-height: 60px;
   --app-login-gradient: linear-gradient(135deg, #1d6f42 0%, #2e9d5b 100%);
+
+  /* Màu biểu đồ thu / chi (đã kiểm tra mù màu + tương phản trên nền sáng & tối) */
+  --app-chart-income: #2a78d6;
+  --app-chart-expense: #eb6834;
 }
 
 html.dark {
@@ -27,6 +31,9 @@ html.dark {
   --el-color-primary-dark-2: #59ae7d;
 
   --app-login-gradient: linear-gradient(135deg, #0d2318 0%, #17402a 100%);
+
+  --app-chart-income: #3987e5;
+  --app-chart-expense: #d95926;
 }
 
 html,

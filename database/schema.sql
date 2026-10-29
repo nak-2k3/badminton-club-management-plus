@@ -69,7 +69,7 @@ DROP TABLE IF EXISTS `expenses`;
 CREATE TABLE `expenses` (
   `expense_id` bigint NOT NULL AUTO_INCREMENT,
   `description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` enum('COURT_RENT','SHUTTLECOCK','EQUIPMENT','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OTHER',
+  `category` enum('SESSION','OTHER') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OTHER',
   `schedule_id` bigint DEFAULT NULL,
   `amount` decimal(12,2) NOT NULL,
   `expense_date` date NOT NULL,
@@ -339,4 +339,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-08 20:55:16
+-- Dump completed on 2026-10-29 21:23:22

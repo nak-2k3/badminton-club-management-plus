@@ -17,6 +17,7 @@ import {
 import ScheduleFormDialog from '@/components/schedules/ScheduleFormDialog.vue'
 import ScheduleParticipants from '@/components/schedules/ScheduleParticipants.vue'
 import ScheduleGuests from '@/components/schedules/ScheduleGuests.vue'
+import ScheduleExpenses from '@/components/schedules/ScheduleExpenses.vue'
 import { SCHEDULE_STATUS_LABELS, SCHEDULE_STATUS_TAG_TYPES, SCHEDULE_TYPE_LABELS } from '@/utils/labels'
 import { formatCurrency, formatDuration, minutesBetween, weekdayOf } from '@/utils/format'
 
@@ -253,6 +254,7 @@ onMounted(fetchSchedule)
         @changed="refreshSchedule"
         @summary="(s) => (guestNotMarked = s.notMarked)"
       />
+      <ScheduleExpenses v-if="canSeeCost" :schedule="schedule" />
     </template>
 
     <ScheduleFormDialog v-model="formVisible" :schedule="schedule" @saved="(saved) => (schedule = saved)" />

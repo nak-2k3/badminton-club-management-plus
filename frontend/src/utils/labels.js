@@ -93,3 +93,14 @@ export const PAYMENT_METHOD_LABELS = {
   CASH: 'Tiền mặt',
   BANK_TRANSFER: 'Chuyển khoản'
 }
+
+// SESSION: chi phí 1 buổi chơi (tiền sân + cầu), mỗi buổi 1 khoản
+export const EXPENSE_CATEGORY_LABELS = {
+  SESSION: 'Tiền sân + cầu',
+  OTHER: 'Khác'
+}
+
+export const EXPENSE_CATEGORY_TAG_TYPES = {
+  SESSION: 'primary',
+  OTHER: 'info'
+}

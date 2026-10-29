@@ -67,3 +67,14 @@ export function formatDuration(minutes) {
   const m = minutes % 60
   return [h && `${h} giờ`, m && `${m} phút`].filter(Boolean).join(' ')
 }
+
+// Điền sẵn khoản chi tiền sân + cầu cho 1 buổi: tiền sân = tiền sân dự kiến (giá × giờ × sân),
+// ngày chi = ngày chơi (buổi trong tương lai thì lấy hôm nay vì ngày chi không được sau hôm nay)
+export function sessionExpensePrefill(schedule) {
+  const playDate = parseDate(schedule.playDate)
+  return {
+    description: `Tiền sân + cầu ${schedule.title} (${schedule.playDate})`,
+    courtFee: schedule.estimatedCourtCost != null ? Number(schedule.estimatedCourtCost) : null,
+    expenseDate: playDate && playDate <= startOfToday() ? schedule.playDate : todayText()
+  }
+}

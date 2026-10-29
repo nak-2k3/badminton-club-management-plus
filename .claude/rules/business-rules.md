@@ -13,7 +13,7 @@
 | `fee_settings` | Mức phí theo `fee_type`: `MONTHLY` phí tháng (theo giới tính) / `GUEST` phí khách mỗi buổi (như nhau, `gender` = NULL) |
 | `payment_batches` | **Đợt thu**: gom các khoản thu tạo cùng lúc — nội dung, loại, tháng/năm (phí tháng), số tiền mỗi người (thu thêm), ghi chú |
 | `payments` | Khoản thu của 1 thành viên trong 1 đợt (`batch_id`): `MONTHLY` / `EXTRA`, hình thức `CASH` / `BANK_TRANSFER` |
-| `expenses` | Khoản chi, phân loại `category` (`COURT_RENT`, `SHUTTLECOCK`, `EQUIPMENT`, `OTHER`), có thể gắn `schedule_id` |
+| `expenses` | Khoản chi, phân loại `category`: `SESSION` (tiền sân + cầu của 1 buổi) / `OTHER` (khác), có thể gắn `schedule_id` |
 
 ## Vai trò
 - `ADMIN` quản trị toàn bộ; `TREASURER` quản lý thu chi; `MEMBER` thành viên.
@@ -25,10 +25,14 @@
   - Phí khách: `fee_type = GUEST` và `gender IS NULL` — một mức chung cho mọi khách, không phụ thuộc `guests.gender`. Chép vào `guest_registrations.fee` lúc đăng ký (để đổi giá sau không ảnh hưởng dữ liệu cũ).
 - Payment `MONTHLY` phải có `month` (1–12) và `year`; không thu trùng 1 tháng cho 1 user (đã có unique + CHECK trong DB).
 - Khi đánh dấu đã thu tiền (`payments.status` hoặc `guest_registrations.payment_status` = `PAID`) phải ghi `paid_at`; với khách ghi thêm `collected_by` (người thu). `invited_by` là thành viên dẫn khách — dùng để truy trách nhiệm khi khách chưa trả.
-- Tiền thuê sân 1 buổi = `courts.hourly_rate` × số giờ (`end_time − start_time`) × `schedules.court_count`. Khoản chi tiền sân ghi vào `expenses` với `category = COURT_RENT` và `schedule_id` của buổi đó.
+- Tiền thuê sân 1 buổi = `courts.hourly_rate` × số giờ (`end_time − start_time`) × `schedules.court_count`. Chi phí buổi (tiền sân + cầu gộp 1 khoản) ghi vào `expenses` với `category = SESSION` và `schedule_id` của buổi đó.
 - `schedules`: DB đã CHECK `end_time > start_time`; validate thêm ở tầng Java `court_count ≥ 1`, `max_players ≥ 1`.
 - Khi kiểm tra `schedules.max_players`, đếm cả `registrations` (status `REGISTERED`) lẫn `guest_registrations`.
-- Báo cáo thu: tổng `payments` + `guest_registrations` đã `PAID`. Báo cáo chi: `expenses` group theo `category`.
+- **Báo cáo** (`ReportService`, ADMIN/TREASURER; `GET /api/reports/summary` và `GET /api/reports/export` (file Excel) dùng chung `load()` nên số trên file luôn khớp màn hình):
+  - Thu = `payments` + `guest_registrations` đã `PAID`, tính theo **ngày thu tiền** (`paid_at`). Chi = `expenses` theo **ngày chi** (`expense_date`), group theo `category`.
+  - Tồn đầu kỳ = thu − chi trước ngày bắt đầu; tồn cuối kỳ = tồn đầu kỳ + thu − chi trong kỳ. Có số liệu từng tháng trong kỳ (đủ mọi tháng, kể cả 0). Kỳ tối đa 60 tháng, `to` ≥ `from`.
+  - Công nợ = số chưa thu **tại thời điểm xem** (không theo kỳ): khoản thu `UNPAID` + phí khách `UNPAID` (tính cho người dẫn; khách tự liên hệ gom 1 dòng; **bỏ khách của buổi đã hủy** vì không thu được), gom theo thành viên, sắp giảm dần.
+  - File Excel (Apache POI, `ReportExcelWriter`) 5 sheet: Tổng quan, Theo tháng, Chi tiết thu, Chi tiết chi, Công nợ.
 - Không xóa cứng user — đổi `status` sang `INACTIVE`/`LOCKED` (các bảng khác tham chiếu `users` bằng FK).
 - **Sân**: tên sân không trùng (không phân biệt hoa thường/dấu). Chỉ xóa được sân chưa có lịch chơi; đã có lịch thì **tạm ngưng** (`active = 0`) — sân tạm ngưng không được chọn khi tạo lịch mới, lịch cũ giữ nguyên.
 - **Lịch chơi** (`ScheduleService`, tạo từng buổi một, không có lặp tự động):
@@ -37,7 +41,7 @@
   - Trạng thái: `OPEN ⇄ CLOSED` (không mở lại khi đã qua giờ bắt đầu); `OPEN/CLOSED → CANCELLED` (lý do ghi thêm vào `note` dạng `Lý do hủy: ...` — tiền tố `ScheduleResponse.CANCEL_REASON_PREFIX`; response tách sẵn thành `cancelReason` để giao diện hiện ở danh sách, trang chi tiết, Trang chủ) hoặc `→ COMPLETED` (khi ngày chơi ≤ hôm nay). `CANCELLED`/`COMPLETED` là trạng thái cuối, không sửa được nữa.
   - Không có tác vụ tự đóng: đăng ký chỉ hợp lệ khi buổi `OPEN`, **chưa tới giờ bắt đầu** và còn chỗ (response có cờ `started`).
   - Chỉ xóa cứng buổi chưa có ai tham gia: không còn đăng ký `REGISTERED`, không có khách/điểm danh/khoản chi. Đăng ký đã hủy bị xóa cùng buổi (không cần giữ). Còn lại thì hủy buổi.
-  - Tiền sân tính bằng `ScheduleService.calculateCourtRent(...)` — dùng lại hàm này khi ghi khoản chi `COURT_RENT`.
+  - Tiền sân tính bằng `ScheduleService.calculateCourtRent(...)` — dùng lại hàm này để gợi ý tiền sân khi ghi khoản chi `SESSION` (tiền sân + cầu).
 - **Đăng ký buổi chơi** (`RegistrationService`): mọi vai trò tự đăng ký/tự hủy qua `/registrations/me`; ADMIN thêm/bớt người khác. Mọi lối vào đi qua cùng `register()`/`cancel()`.
   - Đăng ký: buổi `OPEN`, chưa tới giờ bắt đầu, còn chỗ (thành viên + khách < `max_players`), thành viên `ACTIVE`. Khóa dòng buổi chơi (`findByIdForUpdate`) khi đếm chỗ để 2 người không giành cùng 1 chỗ cuối.
   - Hủy rồi đăng ký lại: dùng lại dòng cũ (unique user + buổi), đổi `status` và cập nhật `registered_at`; không xóa dòng.
@@ -59,6 +63,11 @@
   - **Thu tiền** — 1 khoản (`PATCH /{id}/status`) hoặc nhiều khoản (`POST /bulk-collect`) — đi qua `collect()`: `PAID` bắt buộc `payment_method`, ghi `paid_at`; khoản đã thu thì bỏ qua (hàng loạt) / 400 (1 khoản). `UNPAID` (hoàn tác) xóa 2 cột đó. Bảng không có cột người thu. ADMIN/TREASURER **được** tự ghi nhận đã thu khoản của chính mình (người dùng đã chọn giữ, vì CLB có thể chỉ có 1 người quản lý thu chi).
   - **Sửa**: đợt (`PUT /batches/{id}`) — nội dung, ghi chú; số tiền (chỉ thu thêm) áp dụng cho người **chưa nộp**, người đã nộp giữ số cũ; phí tháng không sửa số tiền. 1 khoản (`PUT /{id}`, chỉ khoản chưa thu) — ghi chú; số tiền riêng chỉ với thu thêm.
   - Danh sách đợt và tab "Tất cả khoản": tổng đã thu/chưa thu theo bộ lọc nhưng không theo trạng thái thu. Lọc theo tháng: phí tháng theo kỳ thu, thu thêm theo tháng tạo đợt. Danh sách chọn thành viên dùng `GET /api/payments/member-options` (mọi người `ACTIVE`, giao diện tự lọc + "Chọn tất cả"; TREASURER không gọi được `/api/members`).
+- **Khoản chi** (`ExpenseService`, ADMIN/TREASURER; MEMBER không xem). Thêm và sửa đi qua cùng `apply()`:
+  - Chỉ 2 loại (người dùng chọn gộp, migration `migration_2026_10_29_expense_categories.sql`): **`SESSION` = tiền sân + cầu** của 1 buổi — **bắt buộc gắn buổi**, **mỗi buổi chỉ 1 khoản** (khóa dòng buổi `findByIdForUpdate` khi kiểm tra; trùng → 400 lỗi `scheduleId`); `OTHER` = khác, gắn buổi tùy chọn.
+  - Thêm `SESSION`: giao diện có 2 ô Tiền sân (tự điền `estimatedCourtCost` = `calculateCourtRent`, sửa được) + Tiền cầu, lưu **tổng** vào `amount`, chi tiết "Sân … + cầu …" ghi vào đầu `note` (bảng chỉ có 1 cột tiền). Sửa: 1 ô tổng. Buổi đã hủy vẫn ghi chi được (vd mất cọc) nhưng không tự điền tiền sân.
+  - Ngày chi không sau hôm nay (tự điền: ngày chơi, buổi tương lai thì hôm nay). Không có trạng thái → sửa / xóa tự do (có xác nhận). Buổi đã có khoản chi không xóa cứng được (hủy buổi).
+  - Danh sách (`GET /api/expenses`, lọc từ khóa / khoảng ngày / loại / `scheduleId`): tổng chi theo đủ các loại theo bộ lọc nhưng không theo bộ lọc loại. Trang chi tiết buổi có thẻ "Khoản chi" (nút "Ghi tiền sân + cầu" điền sẵn, hiện tiền sân dự kiến và số đã ghi).
 - **Mức phí**: đổi giá bằng cách **thêm dòng mới** với `effective_from` mới (giữ lịch sử), không sửa đè; không xóa mức phí, chỉ ngưng (`active = 0`) — khi ngưng, mức trước đó tự áp dụng lại. Không được có 2 dòng active trùng `fee_type` + `gender` + `effective_from`. Mức đang áp dụng tính bằng `FeeSettingService.findEffective(feeType, gender, date)` — dùng hàm này khi tạo học phí tháng / phí khách.
 - **Tài khoản của tôi** (mọi vai trò): tự sửa họ tên, SĐT, giới tính, ngày sinh, địa chỉ; vai trò, trình độ, trạng thái, ngày tham gia chỉ ADMIN sửa.
   - **Email đăng nhập của chính mình chỉ đổi ở đây** (`PATCH /api/account/email`) và **bắt buộc nhập mật khẩu hiện tại**; email mới khác email cũ, không trùng người khác (chuẩn hóa chữ thường). Ở Quản lý thành viên, ADMIN **không** đổi được email của chính mình (backend chặn, giao diện khóa ô) — chỉ đổi email của người khác. Lý do: email là tên đăng nhập, đổi không cần mật khẩu thì người dùng máy đang đăng nhập sẵn có thể chiếm tài khoản.
